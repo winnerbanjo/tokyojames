@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>BOTTER World — Caribbean Couture</title>
+  <meta name="description" content="Caribbean couture luxury fashion by Lisi Herrebrugh and Rushemy Botter. Explore tailoring, knitwear, runway lookbooks, and ocean coral reef sustainability commitments.">
+  
+  <link rel="icon" href="https://botter.world/cdn/shop/files/180x180_botter_32x32.png?v=1700648125" type="image/png">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- ANNOUNCEMENT BAR -->
+  <div class="announcement-bar">
+    <div class="announcement-bar__ticker">
+      <div class="announcement-bar__item">
+        <span class="badge">AW24 DARK WATERS</span>
+        <span>New Runway Collection Available Now — Free Global Express Shipping</span>
+      </div>
+      <div class="announcement-bar__item">
+        <span>•</span>
+        <span>Coral Nursery Curaçao Eco-Commitment</span>
+      </div>
+    </div>
+    
+    <div class="announcement-bar__actions">
+      <select id="currency-select" class="currency-select" aria-label="Select Currency">
+        <option value="EUR" selected>EUR €</option>
+        <option value="USD">USD $</option>
+        <option value="GBP">GBP £</option>
+      </select>
+      <a href="#" data-modal-target="modal-about" style="color:inherit; font-size:11px;">ABOUT</a>
+    </div>
+  </div>
+
+  <!-- SITE HEADER -->
+  <header class="site-header" id="site-header">
+    <div class="site-header__container">
+      <!-- LEFT NAV -->
+      <nav class="site-header__nav-left">
+        <div class="nav-link" id="nav-shop">SHOP ▾</div>
+        <div class="nav-link" id="nav-world">WORLD ▾</div>
+        <a href="#lookbook-section" class="nav-link">LOOKBOOK</a>
+      </nav>
+
+      <!-- LOGO -->
+      <div class="site-header__logo">
+        <a href="index.html">
+          <span class="site-header__logo-text">BOTTER</span>
+          <span class="site-header__logo-subtext">PARIS • CURAÇAO</span>
+        </a>
+      </div>
+
+      <!-- RIGHT ACTIONS -->
+      <div class="site-header__nav-right">
+        <button class="icon-btn" id="search-trigger" aria-label="Search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          SEARCH
+        </button>
+        <a href="#" class="icon-btn" data-modal-target="modal-about">ACCOUNT</a>
+        <button class="icon-btn" id="cart-trigger" aria-label="Cart">
+          CART (<span id="cart-count-badge" class="cart-count-badge">1</span>)
+        </button>
+      </div>
+    </div>
+
+    <!-- MEGA MENU SHOP -->
+    <div class="megamenu" id="megamenu-shop">
+      <div class="megamenu__container">
+        <div>
+          <h4 class="megamenu__column-title">CATEGORIES</h4>
+          <ul class="megamenu__list">
+            <li class="megamenu__item"><a href="#collections">All Products <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#collections">Tailoring <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#collections">Jackets <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#collections">Polos <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#collections">Trousers <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#collections">T-shirts <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#collections">Sweaters <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#collections">Knitwear <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#collections">Accessories <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#collections" style="color:var(--color-accent)">Archive Sale <span>→</span></a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="megamenu__column-title">FEATURED RUNWAY LOOKS</h4>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="megamenu__preview">
+              <img class="megamenu__preview-img" src="https://botter.world/cdn/shop/files/ecommerce_front_images_0002_15a_1200x.jpg?v=1719830480" alt="Bikini Cut Out Jacket">
+              <div class="megamenu__preview-title">Bikini Cut Out Jacket</div>
+              <span style="font-size:11px; font-weight:700; color:var(--color-accent);">€ 1.576,86</span>
+            </div>
+            <div class="megamenu__preview">
+              <img class="megamenu__preview-img" src="https://botter.world/cdn/shop/files/C1A4961_1200x.jpg?v=1706520792" alt="Crochet Bikini Sweater">
+              <div class="megamenu__preview-title">Crochet Bikini Sweater</div>
+              <span style="font-size:11px; font-weight:700; color:var(--color-accent);">€ 644,63</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="megamenu__column-title">CARIBBEAN COUTURE</h4>
+          <p style="font-size:12px; line-height:1.6; color:#666; margin-bottom:16px;">
+            Merging Belgian & Dutch couture mastery with the vibrant artistic heritage of the Caribbean and ocean conservation.
+          </p>
+          <a href="#" data-modal-target="modal-about" class="btn-primary btn-dark" style="width:100%; text-align:center; padding:10px;">Explore House Narrative</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEGA MENU WORLD -->
+    <div class="megamenu" id="megamenu-world">
+      <div class="megamenu__container">
+        <div>
+          <h4 class="megamenu__column-title">THE HOUSE</h4>
+          <ul class="megamenu__list">
+            <li class="megamenu__item"><a href="#" data-modal-target="modal-about">About Lisi & Rushemy <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#" data-modal-target="modal-manifesto">Read Manifesto <span>→</span></a></li>
+            <li class="megamenu__item"><a href="#" data-modal-target="modal-sustainability">Coral Restoration <span>→</span></a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="megamenu__column-title">OUR ETHOS</h4>
+          <p style="font-size:13px; line-height:1.6; color:#333; margin-bottom:12px;">
+            "We care about nature as the golden mother of all arts. Without the sea, no human, no us."
+          </p>
+          <a href="#" data-modal-target="modal-manifesto" style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-accent);">Read Full Manifesto →</a>
+        </div>
+
+        <div>
+          <img src="https://botter.world/cdn/shop/files/BOTTER-20201232-2.jpg?v=1625496290" style="width:100%; height:200px; object-fit:cover; border:1px solid #ddd;" alt="Botter World">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO CAMPAIGN SECTION -->
+  <section class="hero-campaign">
+    <div class="hero-campaign__video-wrapper">
+      <video autoplay loop muted playsinline poster="https://botter.world/cdn/shop/files/BACKGROUND7_1296x.jpg">
+        <source src="https://cdn.shopify.com/videos/c/o/v/538bd57650114bd59e2877c2d4bbb432.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="hero-campaign__overlay"></div>
+    <div class="hero-campaign__content">
+      <span class="hero-campaign__sub-tag">AW24 CAMPAIGN</span>
+      <h1 class="hero-campaign__title">DARK WATERS</h1>
+      <p class="hero-campaign__description">
+        Subterranean aquatic tailoring, bio-fabricated textiles, and Caribbean ocean energy sculpted by Rushemy Botter and Lisi Herrebrugh.
+      </p>
+      <div class="hero-campaign__actions">
+        <a href="#collections" class="btn-primary">Shop Collection</a>
+        <button class="btn-secondary" onclick="openVideoModal()">Full Look Video 🎥</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLLECTION SHOWCASE SECTION -->
+  <section id="collections">
+    <div class="section-header">
+      <h2 class="section-header__title">CURRENT COLLECTION FW23 / AW24</h2>
+      <div class="collection-tabs">
+        <button class="tab-btn active" data-category="all">All Products</button>
+        <button class="tab-btn" data-category="tailoring">Tailoring</button>
+        <button class="tab-btn" data-category="jackets">Jackets</button>
+        <button class="tab-btn" data-category="polos">Polos</button>
+        <button class="tab-btn" data-category="sweaters">Sweaters & Knitwear</button>
+        <button class="tab-btn" data-category="accessories">Accessories</button>
+        <button class="tab-btn" data-category="archive-sale">Archive Sale</button>
+      </div>
+    </div>
+
+    <div class="product-grid-section">
+      <div class="product-grid" id="product-grid">
+        <!-- Injected dynamically via app.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- BRAND MANIFESTO BANNER -->
+  <section class="brand-banner">
+    <video class="brand-banner__video-bg" autoplay loop muted playsinline>
+      <source src="https://cdn.shopify.com/videos/c/o/v/538bd57650114bd59e2877c2d4bbb432.mp4" type="video/mp4">
+    </video>
+    <div class="brand-banner__content">
+      <span class="brand-banner__tag">BOTTER WORLD • WE CARE</span>
+      <h2 class="brand-banner__title">RESTORING THE CARIBBEAN SEA</h2>
+      <p class="brand-banner__quote">
+        "On Curaçao, the coral reef is dying. Giving life again to the coral reef is giving back to nature, giving back to the world."
+      </p>
+      <div style="display:flex; justify-content:center; gap:16px;">
+        <button class="btn-primary" data-modal-target="modal-manifesto">Read Manifesto</button>
+        <button class="btn-secondary" data-modal-target="modal-sustainability">Coral Restoration</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOOKBOOK SHOWCASE -->
+  <section class="lookbook-section" id="lookbook-section">
+    <div class="section-header" style="border:none; padding:0 0 24px 0;">
+      <h2 class="section-header__title">RUNWAY LOOKBOOKS</h2>
+      <p style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#666;">
+        Explore past and present runway archives from Paris Fashion Week
+      </p>
+    </div>
+
+    <div class="lookbook-grid" id="lookbook-grid">
+      <!-- Injected via app.js -->
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div>
+        <h4 class="footer-col__title">BOTTER WORLD</h4>
+        <nav class="footer-nav">
+          <a href="#" data-modal-target="modal-about">About Lisi & Rushemy</a>
+          <a href="#" data-modal-target="modal-manifesto">Manifesto</a>
+          <a href="#" data-modal-target="modal-sustainability">Sustainability Commitment</a>
+          <a href="https://instagram.com" target="_blank" rel="noopener">Instagram ↗</a>
+        </nav>
+      </div>
+
+      <div>
+        <h4 class="footer-col__title">CUSTOMER SERVICE</h4>
+        <nav class="footer-nav">
+          <a href="#" onclick="alert('Shipping & Returns policy: Free Express Shipping over €300.'); return false;">Shipping & Returns</a>
+          <a href="#" onclick="alert('Terms & Conditions: Official BOTTER World digital store terms.'); return false;">Legal T&C</a>
+          <a href="#" onclick="alert('Privacy Policy: We respect and protect your personal data privacy.'); return false;">Privacy Policy</a>
+          <a href="#" onclick="alert('Contact: assistance@botter.world'); return false;">Contact Us</a>
+        </nav>
+      </div>
+
+      <div>
+        <h4 class="footer-col__title">NEWSLETTER</h4>
+        <p style="font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:12px;">
+          Subscribe to receive exclusive runway lookbook updates & private archives access.
+        </p>
+        <form class="newsletter-form" onsubmit="alert('Thank you for subscribing to BOTTER World.'); return false;">
+          <input type="email" class="newsletter-input" placeholder="Enter your email address" required>
+          <button type="submit" class="btn-primary" style="padding:10px; font-size:10px;">SUBSCRIBE</button>
+        </form>
+      </div>
+
+      <div>
+        <h4 class="footer-col__title">HEADQUARTERS</h4>
+        <p style="font-size:12px; line-height:1.6; color:rgba(255,255,255,0.7);">
+          BOTTER World<br>
+          Paris Fashion Week • Curaçao<br>
+          Coral Nursery Curacao Foundation
+        </p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>© BOTTER World 2026. Caribbean Couture. All rights reserved.</div>
+      <div>Visa • Mastercard • Apple Pay • Shop Pay</div>
+    </div>
+  </footer>
+
+  <!-- CART SLIDE-OUT DRAWER -->
+  <div class="cart-drawer-overlay" id="cart-overlay"></div>
+  <aside class="cart-drawer" id="cart-drawer" aria-label="Shopping Cart">
+    <div class="cart-drawer__header">
+      <h3 class="cart-drawer__title">YOUR CART</h3>
+      <button class="cart-drawer__close" id="cart-close" aria-label="Close Cart">✕</button>
+    </div>
+
+    <div class="cart-drawer__body" id="cart-drawer-body">
+      <!-- Dynamic cart items -->
+    </div>
+
+    <div class="cart-drawer__footer">
+      <div class="cart-summary-row">
+        <span>Subtotal</span>
+        <span id="cart-subtotal">€ 292,56</span>
+      </div>
+      <p style="font-size:10px; color:#666; margin-bottom:12px;">Taxes and shipping calculated at checkout.</p>
+      <button class="btn-primary btn-dark" style="width:100%; padding:14px;" onclick="triggerCheckout()">PROCEED TO CHECKOUT</button>
+    </div>
+  </aside>
+
+  <!-- SEARCH OVERLAY -->
+  <div class="search-overlay" id="search-overlay">
+    <div style="display:flex; justify-content:flex-end;">
+      <button id="search-close" style="font-size:24px;">✕</button>
+    </div>
+    <div class="search-input-container">
+      <input type="text" id="search-input" class="search-input" placeholder="Search BOTTER products, tailoring, knitwear..." autofocus>
+    </div>
+    <div class="search-results" id="search-results"></div>
+  </div>
+
+  <!-- MODAL: ABOUT -->
+  <div class="modal-overlay" id="modal-about">
+    <div class="modal-content">
+      <span class="modal-close-btn" onclick="closeAllModals()">✕</span>
+      <h2 class="modal-title">ABOUT BOTTER</h2>
+      <div class="modal-body">
+        <p>
+          Representing the fusion of music, literary, culinary and origins, that all together forms the rich and hybrid Caribbean culture. BOTTER’s identity combines its ‘Caribbean Couture’ spirit, as well as its glance towards Arte Povera’s philosophy, together with a strong sustainability consciousness.
+        </p>
+        <p>
+          As a brand whose DNA directly rises from one of the world’s most biologically diverse marine regions, BOTTER does not bear to witness the pollution of the ocean, setting targets to embrace and preserve nature in all its forms.
+        </p>
+        <p>
+          Lisi Herrebrugh and Rushemy Botter are the design team behind BOTTER. The creative duo combines their multicultural influences and their mastery of Belgium and Dutch tailoring to infuse their label with a distinct notion of luxury. Edgy yet inclusive, their creative sight is an extension of their own personalities.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MANIFESTO -->
+  <div class="modal-overlay" id="modal-manifesto">
+    <div class="modal-content">
+      <span class="modal-close-btn" onclick="closeAllModals()">✕</span>
+      <h2 class="modal-title">BOTTER MANIFESTO</h2>
+      <div class="modal-body">
+        <blockquote>
+          "At BOTTER we care. We care about fashion, as the golden daughter of all arts. We care about nature, as the golden mother of all arts. Without nature, no arts, nothing. Without the sea, no human, no us."
+        </blockquote>
+        <p>
+          Speaking up and acting for the Caribbean Sea, is an act of respect. Respect to the human race motherland, respect to our ancestors’ motherland. Preserving it sounds to us like an evidence, an obligation.
+        </p>
+        <p>
+          On Curaçao, as on many islands, the coral reef – epitome of oceans ecosystem – is dying. Under the unconcerned eye of mass tourism, the fishing industry, and environmental issues. Giving life again to the coral reef is giving back to nature, giving back to the world.
+        </p>
+        <p>
+          This is the purpose of our deep involvement in the BOTTER coral nursery, an organization that actively works on reviving the coral reef. This is the idea we have for a better world, this is the idea we have for the BOTTER world.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SUSTAINABILITY -->
+  <div class="modal-overlay" id="modal-sustainability">
+    <div class="modal-content">
+      <span class="modal-close-btn" onclick="closeAllModals()">✕</span>
+      <h2 class="modal-title">SUSTAINABILITY & CORAL NURSERY CURAÇAO</h2>
+      <div class="modal-body">
+        <p><strong>Giving back to our own Non Profit Organization through fashion. ‘Coral nursery Curacao’</strong></p>
+        <p>
+          We are truly connected to our narrative, telling an honest story through our brand and our creations. It’s very important to us to have a circular system within our company through our non profit organization that is fighting for the health of the ocean by protecting the coral reef on Curacao.
+        </p>
+        <p>
+          We are setting up an innovation team with scientists, engineers, artists, and future thinkers who are helping us accelerate our brand innovation into materials like bio fabricated clothing made from algae, biodegradable textiles grown from live organisms, or shell water repellent coatings.
+        </p>
+        <p>
+          BOTTER's collections are not made to tap the sustainability box but a whole business run on a Solar punk mindset where technology is leading and emotion and storytelling are vital.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: QUICK VIEW -->
+  <div class="modal-overlay" id="modal-quickview">
+    <div class="modal-content" id="quickview-modal-body">
+      <!-- Injected via app.js -->
+    </div>
+  </div>
+
+  <!-- MODAL: VIDEO LIGHTBOX -->
+  <div class="modal-overlay" id="modal-video">
+    <div class="modal-content" style="max-width:900px; padding:20px; background:#000;">
+      <span class="modal-close-btn" style="color:#fff;" onclick="closeAllModals()">✕</span>
+      <div style="position:relative; padding-top:56.25%;">
+        <iframe src="https://player.vimeo.com/video/988386260?autoplay=1" style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
