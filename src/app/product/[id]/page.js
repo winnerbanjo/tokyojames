@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { useCurrency } from '@/context/CurrencyContext';
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const { formatPrice } = useCurrency();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
@@ -35,7 +37,6 @@ export default function ProductDetailPage() {
       return;
     }
     
-    // Dispatch global event for layout cart state
     const event = new CustomEvent('tj-add-to-cart', {
       detail: {
         id: product.id,
@@ -55,7 +56,6 @@ export default function ProductDetailPage() {
       return;
     }
     
-    // Dispatch buy now event to launch checkout directly
     const event = new CustomEvent('tj-buy-now', {
       detail: {
         id: product.id,
@@ -120,7 +120,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* GARMENT DETAILS & SHOPPING CONTROLS */}
+        {/* GARMENT DETAILS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {product.badge && (
@@ -134,7 +134,7 @@ export default function ProductDetailPage() {
           </h1>
 
           <div style={{ fontSize: '20px', fontWeight: '700', color: '#d00000' }}>
-            € {product.priceEUR.toFixed(2).replace('.', ',')}
+            {formatPrice(product.priceEUR)}
           </div>
 
           <p style={{ fontSize: '14px', lineHeight: '1.7', color: '#333' }}>

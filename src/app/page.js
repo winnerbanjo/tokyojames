@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useCurrency } from '@/context/CurrencyContext';
 
 export default function HomePage() {
+  const { formatPrice } = useCurrency();
   const [products, setProducts] = useState([]);
   const [activeCategory, setActiveCategory] = useState('all');
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
@@ -28,7 +30,7 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* SECTION 1: HERO CAMPAIGN VIDEO (MATCHING BOTTER.WORLD EXACT STRUCTURE) */}
+      {/* HERO CAMPAIGN VIDEO SECTION */}
       <section className="video-section-container" id="section-hero">
         <video 
           className="video-section__bg-video" 
@@ -39,7 +41,6 @@ export default function HomePage() {
           poster="/images/tj_drive_4.jpg"
         >
           <source src="/videos/tj_campaign_3.mp4" type="video/mp4" />
-          <source src="/videos/tj_campaign_1.mov" type="video/mp4" />
         </video>
         <div className="video-section__overlay"></div>
 
@@ -59,7 +60,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SECTION 2: CURRENT COLLECTION BANNER */}
+      {/* CURRENT COLLECTION BANNER */}
       <section className="hero-banner__image-wrapper" id="section-collection-banner">
         <img 
           src="/images/tj_drive_6.jpg" 
@@ -78,10 +79,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SECTION 3: PRODUCT COLLECTION GRID WITH SCROLLABLE TABS */}
+      {/* PRODUCT COLLECTION GRID WITH DYNAMIC CURRENCY */}
       <section className="collection-section" id="collections">
         
-        {/* TOUCH SCROLLABLE FILTER TABS */}
+        {/* FILTER TABS */}
         <div className="collection-tabs-scroll-container">
           <div className="collection-tabs-scroll">
             <button 
@@ -135,7 +136,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 4-COLUMN / 2-COLUMN RESPONSIVE PRODUCT GRID */}
+        {/* RESPONSIVE PRODUCT GRID */}
         <div className="product-grid">
           {filteredProducts.map(product => (
             <div key={product.id} className="grid-view-item">
@@ -163,9 +164,9 @@ export default function HomePage() {
                   <h3 className="grid-view-item__title">{product.title}</h3>
                   <div className="product-price">
                     {product.originalPriceEUR && (
-                      <span className="product-price__sale">€ {product.originalPriceEUR.toFixed(2).replace('.', ',')}</span>
+                      <span className="product-price__sale">{formatPrice(product.originalPriceEUR)}</span>
                     )}
-                    <span>€ {product.priceEUR.toFixed(2).replace('.', ',')}</span>
+                    <span>{formatPrice(product.priceEUR)}</span>
                   </div>
                 </div>
 
@@ -176,7 +177,7 @@ export default function HomePage() {
 
       </section>
 
-      {/* SECTION 4: BRAND WORLD VIDEO BANNER */}
+      {/* BRAND WORLD BANNER */}
       <section className="brand-world-container" id="section-world">
         <video 
           className="brand-world__bg-video" 
@@ -203,7 +204,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SECTION 5: RUNWAY LOOKBOOK ARCHIVE GRID */}
+      {/* RUNWAY LOOKBOOKS */}
       <section className="lookbook-archive-section" id="lookbooks">
         <div className="section-header-title">
           <h2>Runway Lookbook Archives</h2>
@@ -236,7 +237,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FULL-SCREEN RUNWAY VIDEO MODAL */}
+      {/* VIDEO MODAL */}
       {isVideoModalOpen && (
         <div className="modal-overlay is-open" onClick={() => setIsVideoModalOpen(false)}>
           <div style={{ width: '100%', maxWidth: '900px', margin: 'auto', position: 'relative', background: '#000', padding: '10px' }}>
