@@ -11,6 +11,7 @@ export default function RootLayout({ children }) {
   const [currency, setCurrency] = useState('EUR');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'about', 'manifesto', 'sustainability', 'video'
   const [megamenu, setMegamenu] = useState(null); // 'shop', 'world', 'lookbook'
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,16 +84,23 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <title>TOKYO JAMES — TOKYO JAMES World</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
         <meta name="description" content="British tailoring with West African soul by Ina Adenugba. Runway collections, leather jackets, tailored outerwear, and lookbooks." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body>
-        {/* SITE HEADER MATCHING BOTTER.WORLD */}
+        {/* SITE HEADER MATCHING BOTTER.WORLD + MOBILE HAMBURGER */}
         <header className="site-header" id="myHeader">
           <div className="site-header__container">
-            {/* LEFT NAVIGATION */}
+            
+            {/* MOBILE HAMBURGER TOGGLE BUTTON */}
+            <button className="mobile-hamburger-btn" onClick={() => setIsMobileNavOpen(true)} aria-label="Open Mobile Menu">
+              ☰
+            </button>
+
+            {/* DESKTOP LEFT NAVIGATION */}
             <nav className="site-header__nav-left">
               <div 
                 className={`site-nav__link ${megamenu === 'shop' ? 'active' : ''}`}
@@ -138,7 +146,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
 
-          {/* MEGAMENU SHOP */}
+          {/* DESKTOP MEGAMENU SHOP */}
           <div 
             className={`megamenu ${megamenu === 'shop' ? 'is-open' : ''}`}
             onMouseLeave={() => setMegamenu(null)}
@@ -179,7 +187,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
 
-          {/* MEGAMENU WORLD */}
+          {/* DESKTOP MEGAMENU WORLD */}
           <div 
             className={`megamenu ${megamenu === 'world' ? 'is-open' : ''}`}
             onMouseLeave={() => setMegamenu(null)}
@@ -203,7 +211,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
 
-          {/* MEGAMENU LOOKBOOK */}
+          {/* DESKTOP MEGAMENU LOOKBOOK */}
           <div 
             className={`megamenu ${megamenu === 'lookbook' ? 'is-open' : ''}`}
             onMouseLeave={() => setMegamenu(null)}
@@ -241,12 +249,70 @@ export default function RootLayout({ children }) {
           </div>
         </header>
 
+        {/* MOBILE NAVIGATION DRAWER */}
+        <div className={`mobile-nav-overlay ${isMobileNavOpen ? 'is-open' : ''}`} onClick={() => setIsMobileNavOpen(false)}></div>
+        <aside className={`mobile-nav-drawer ${isMobileNavOpen ? 'is-open' : ''}`}>
+          <div className="mobile-nav-drawer__header">
+            <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '3px', textTransform: 'uppercase' }}>TOKYO JAMES</span>
+            <button style={{ fontSize: '20px', cursor: 'pointer' }} onClick={() => setIsMobileNavOpen(false)}>✕</button>
+          </div>
+
+          <div className="mobile-nav-drawer__body">
+            <div className="mobile-nav-group">
+              <h4 className="mobile-nav-group__title">SHOP CATEGORIES</h4>
+              <div className="mobile-nav-group__list">
+                <a href="/#collections" onClick={() => setIsMobileNavOpen(false)}>All Products <span>→</span></a>
+                <a href="/#collections" onClick={() => setIsMobileNavOpen(false)}>Bespoke Tailoring <span>→</span></a>
+                <a href="/#collections" onClick={() => setIsMobileNavOpen(false)}>Leather & Jackets <span>→</span></a>
+                <a href="/#collections" onClick={() => setIsMobileNavOpen(false)}>Polos & Shirts <span>→</span></a>
+                <a href="/#collections" onClick={() => setIsMobileNavOpen(false)}>Trousers <span>→</span></a>
+                <a href="/#collections" onClick={() => setIsMobileNavOpen(false)}>Knitwear <span>→</span></a>
+                <a href="/#collections" onClick={() => setIsMobileNavOpen(false)}>Accessories <span>→</span></a>
+                <a href="/#collections" onClick={() => setIsMobileNavOpen(false)} style={{ color: 'var(--color-sale)' }}>Archive Sale <span>→</span></a>
+              </div>
+            </div>
+
+            <div className="mobile-nav-group">
+              <h4 className="mobile-nav-group__title">WORLD & HOUSE</h4>
+              <div className="mobile-nav-group__list">
+                <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); setIsMobileNavOpen(false); }}>About Tokyo James <span>→</span></a>
+                <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); setIsMobileNavOpen(false); }}>The Manifesto <span>→</span></a>
+                <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); setIsMobileNavOpen(false); }}>Craftsmanship & Sustainability <span>→</span></a>
+              </div>
+            </div>
+
+            <div className="mobile-nav-group">
+              <h4 className="mobile-nav-group__title">RUNWAY ARCHIVES</h4>
+              <div className="mobile-nav-group__list">
+                <a href="/#lookbooks" onClick={() => setIsMobileNavOpen(false)}>AW24 Night Call <span>→</span></a>
+                <a href="/#lookbooks" onClick={() => setIsMobileNavOpen(false)}>SS24 Afro-Futurism <span>→</span></a>
+                <a href="/#lookbooks" onClick={() => setIsMobileNavOpen(false)}>AW23 Cowhide Rebellion <span>→</span></a>
+              </div>
+            </div>
+          </div>
+
+          <div className="mobile-nav-drawer__footer">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '600' }}>Currency:</span>
+              <select 
+                value={currency} 
+                onChange={(e) => setCurrency(e.target.value)}
+                style={{ border: '1px solid #000', padding: '4px 8px', fontSize: '12px' }}
+              >
+                <option value="EUR">EUR €</option>
+                <option value="USD">USD $</option>
+                <option value="GBP">GBP £</option>
+              </select>
+            </div>
+          </div>
+        </aside>
+
         {/* MAIN PAGE */}
         <main id="MainContent">
           {children}
         </main>
 
-        {/* SITE FOOTER MATCHING BOTTER.WORLD */}
+        {/* SITE FOOTER */}
         <footer className="site-footer" role="contentinfo">
           <div className="site-footer__content">
             <div className="site-footer__column">

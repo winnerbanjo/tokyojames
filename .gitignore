@@ -29,6 +29,10 @@ lerna-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# heavy assets
+/public/drive_assets/
+*.mov
+
 # OS files
 .DS_Store
 *.pem
