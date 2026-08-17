@@ -5,18 +5,34 @@ import { useState, useEffect } from 'react';
 
 export default function RootLayout({ children }) {
   const [cart, setCart] = useState([
-    { id: 'tj-1', title: 'Sculptural Cowhide-Panelled Wool Blazer', size: '48', priceEUR: 1850.00, quantity: 1, image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000&auto=format&fit=crop' }
+    { id: 'tj-1', title: 'Sculptural Cowhide-Panelled Wool Blazer', size: '48', priceEUR: 1850.00, quantity: 1, image: '/images/tj_drive_4.jpg' }
   ]);
 
   const [currency, setCurrency] = useState('EUR');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState(null); // 'about', 'manifesto', 'sustainability', 'video'
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState(null);
+  const [activeModal, setActiveModal] = useState(null); // 'about', 'manifesto', 'sustainability'
   const [megamenu, setMegamenu] = useState(null); // 'shop', 'world', 'lookbook'
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [products, setProducts] = useState([]);
+
+  // Checkout Form State
+  const [checkoutForm, setCheckoutForm] = useState({
+    customerName: '',
+    email: '',
+    address: '',
+    city: '',
+    country: 'United Kingdom',
+    zip: '',
+    cardNumber: '4242 4242 4242 4242',
+    cardExp: '12/28',
+    cardCvc: '888'
+  });
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
   useEffect(() => {
     fetch('/api/products')
@@ -25,6 +41,37 @@ export default function RootLayout({ children }) {
         if (data.success) setProducts(data.data);
       })
       .catch(err => console.error('Error fetching products:', err));
+  }, []);
+
+  // Listen for custom add to cart & buy now events from Product Detail Page
+  useEffect(() => {
+    const handleAddToCartEvent = (e) => {
+      const item = e.detail;
+      setCart(prev => {
+        const existingIdx = prev.findIndex(p => p.id === item.id && p.size === item.size);
+        if (existingIdx !== -1) {
+          const updated = [...prev];
+          updated[existingIdx].quantity += item.quantity;
+          return updated;
+        }
+        return [...prev, item];
+      });
+      setIsCartOpen(true);
+    };
+
+    const handleBuyNowEvent = (e) => {
+      const item = e.detail;
+      setCart([item]);
+      setIsCheckoutOpen(true);
+    };
+
+    window.addEventListener('tj-add-to-cart', handleAddToCartEvent);
+    window.addEventListener('tj-buy-now', handleBuyNowEvent);
+
+    return () => {
+      window.removeEventListener('tj-add-to-cart', handleAddToCartEvent);
+      window.removeEventListener('tj-buy-now', handleBuyNowEvent);
+    };
   }, []);
 
   useEffect(() => {
@@ -53,14 +100,56 @@ export default function RootLayout({ children }) {
   const cartTotal = cart.reduce((sum, item) => sum + (item.priceEUR * item.quantity), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const updateQuantity = (id, delta) => {
+  const updateQuantity = (id, size, delta) => {
     setCart(prev => prev.map(item => {
-      if (item.id === id) {
+      if (item.id === id && item.size === size) {
         const newQty = item.quantity + delta;
         return newQty > 0 ? { ...item, quantity: newQty } : null;
       }
       return item;
     }).filter(Boolean));
+  };
+
+  const handleProcessOrder = async (e) => {
+    e.preventDefault();
+    if (!cart.length) {
+      alert('Your cart is empty');
+      return;
+    }
+
+    setIsSubmittingOrder(true);
+    try {
+      const payload = {
+        customerName: checkoutForm.customerName,
+        email: checkoutForm.email,
+        address: checkoutForm.address,
+        city: checkoutForm.city,
+        country: checkoutForm.country,
+        zip: checkoutForm.zip,
+        items: cart,
+        totalEUR: cartTotal,
+        paymentMethod: 'Credit Card (**** 4242)'
+      };
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        setCompletedOrder(result.data);
+        setCart([]);
+        setIsCheckoutOpen(false);
+      } else {
+        alert('Order processing failed: ' + result.message);
+      }
+    } catch (err) {
+      alert('Error submitting order: ' + err.message);
+    } finally {
+      setIsSubmittingOrder(false);
+    }
   };
 
   const handleSubscribe = async (e) => {
@@ -83,7 +172,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <title>TOKYO JAMES — TOKYO JAMES World</title>
+        <title>TOKYO JAMES — Official Store</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
         <meta name="description" content="British tailoring with West African soul by Ina Adenugba. Runway collections, leather jackets, tailored outerwear, and lookbooks." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -91,16 +180,15 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body>
-        {/* SITE HEADER MATCHING BOTTER.WORLD + MOBILE HAMBURGER */}
+        
+        {/* HEADER */}
         <header className="site-header" id="myHeader">
           <div className="site-header__container">
             
-            {/* MOBILE HAMBURGER TOGGLE BUTTON */}
             <button className="mobile-hamburger-btn" onClick={() => setIsMobileNavOpen(true)} aria-label="Open Mobile Menu">
               ☰
             </button>
 
-            {/* DESKTOP LEFT NAVIGATION */}
             <nav className="site-header__nav-left">
               <div 
                 className={`site-nav__link ${megamenu === 'shop' ? 'active' : ''}`}
@@ -122,23 +210,21 @@ export default function RootLayout({ children }) {
               </div>
             </nav>
 
-            {/* LOGO CENTERED */}
             <div className="site-header__logo">
               <a href="/" className="site-header__logo-link">
                 <span className="site-header__logo-text">TOKYO JAMES</span>
               </a>
             </div>
 
-            {/* RIGHT ACTIONS */}
             <div className="site-header__nav-right">
               <button className="site-header__icon-btn" onClick={() => setIsSearchOpen(true)}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                 <span className="visually-hidden">Search</span>
               </button>
 
-              <button className="site-header__icon-btn" onClick={() => setActiveModal('about')}>
-                Account
-              </button>
+              <a href="/admin" className="site-header__icon-btn">
+                Admin
+              </a>
 
               <button className="site-header__icon-btn" onClick={() => setIsCartOpen(true)}>
                 Cart ( {cartCount} )
@@ -146,7 +232,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
 
-          {/* DESKTOP MEGAMENU SHOP */}
+          {/* MEGAMENU SHOP */}
           <div 
             className={`megamenu ${megamenu === 'shop' ? 'is-open' : ''}`}
             onMouseLeave={() => setMegamenu(null)}
@@ -155,14 +241,11 @@ export default function RootLayout({ children }) {
               <div className="megamenu__column">
                 <h4 className="megamenu__column-title">CATEGORIES</h4>
                 <ul className="megamenu__list">
-                  <li><a href="/#collections">All</a></li>
-                  <li><a href="/#collections">Tailoring</a></li>
-                  <li><a href="/#collections">Jackets</a></li>
-                  <li><a href="/#collections">Polos</a></li>
+                  <li><a href="/#collections">All Products</a></li>
+                  <li><a href="/#collections">Bespoke Tailoring</a></li>
+                  <li><a href="/#collections">Leather & Jackets</a></li>
+                  <li><a href="/#collections">Polos & Shirts</a></li>
                   <li><a href="/#collections">Trousers</a></li>
-                  <li><a href="/#collections">T-shirts</a></li>
-                  <li><a href="/#collections">Sweaters</a></li>
-                  <li><a href="/#collections">Hoodies</a></li>
                   <li><a href="/#collections">Knitwear</a></li>
                   <li><a href="/#collections">Accessories</a></li>
                   <li><a href="/#collections" style={{ color: 'var(--color-sale)' }}>Archive sale</a></li>
@@ -170,15 +253,15 @@ export default function RootLayout({ children }) {
               </div>
 
               <div className="megamenu__column megamenu__preview-col">
-                <h4 className="megamenu__column-title">FEATURED PIECES</h4>
+                <h4 className="megamenu__column-title">FEATURED RUNWAY GARMENTS</h4>
                 <div className="megamenu__preview-grid">
                   <div className="megamenu__preview-item">
-                    <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000&auto=format&fit=crop" alt="Cowhide Blazer" />
+                    <img src="/images/tj_drive_4.jpg" alt="Cowhide Blazer" />
                     <div className="megamenu__preview-name">Sculptural Cowhide Wool Blazer</div>
                     <div className="megamenu__preview-price">{formatPrice(1850)}</div>
                   </div>
                   <div className="megamenu__preview-item">
-                    <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1000&auto=format&fit=crop" alt="Croc Leather Biker" />
+                    <img src="/images/tj_drive_6.jpg" alt="Croc Leather Biker" />
                     <div className="megamenu__preview-name">Embossed Croc Leather Biker</div>
                     <div className="megamenu__preview-price">{formatPrice(2400)}</div>
                   </div>
@@ -187,7 +270,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
 
-          {/* DESKTOP MEGAMENU WORLD */}
+          {/* MEGAMENU WORLD */}
           <div 
             className={`megamenu ${megamenu === 'world' ? 'is-open' : ''}`}
             onMouseLeave={() => setMegamenu(null)}
@@ -196,8 +279,8 @@ export default function RootLayout({ children }) {
               <div className="megamenu__column">
                 <h4 className="megamenu__column-title">WORLD</h4>
                 <ul className="megamenu__list">
-                  <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); }}>About</a></li>
-                  <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); }}>Manifesto</a></li>
+                  <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); }}>About Tokyo James</a></li>
+                  <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); }}>The Manifesto</a></li>
                   <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); }}>Sustainability</a></li>
                 </ul>
               </div>
@@ -211,7 +294,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
 
-          {/* DESKTOP MEGAMENU LOOKBOOK */}
+          {/* MEGAMENU LOOKBOOK */}
           <div 
             className={`megamenu ${megamenu === 'lookbook' ? 'is-open' : ''}`}
             onMouseLeave={() => setMegamenu(null)}
@@ -273,20 +356,10 @@ export default function RootLayout({ children }) {
             </div>
 
             <div className="mobile-nav-group">
-              <h4 className="mobile-nav-group__title">WORLD & HOUSE</h4>
+              <h4 className="mobile-nav-group__title">ADMIN & ACCOUNT</h4>
               <div className="mobile-nav-group__list">
+                <a href="/admin" onClick={() => setIsMobileNavOpen(false)} style={{ color: '#d00000', fontWeight: '700' }}>Admin Dashboard <span>→</span></a>
                 <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); setIsMobileNavOpen(false); }}>About Tokyo James <span>→</span></a>
-                <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); setIsMobileNavOpen(false); }}>The Manifesto <span>→</span></a>
-                <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); setIsMobileNavOpen(false); }}>Craftsmanship & Sustainability <span>→</span></a>
-              </div>
-            </div>
-
-            <div className="mobile-nav-group">
-              <h4 className="mobile-nav-group__title">RUNWAY ARCHIVES</h4>
-              <div className="mobile-nav-group__list">
-                <a href="/#lookbooks" onClick={() => setIsMobileNavOpen(false)}>AW24 Night Call <span>→</span></a>
-                <a href="/#lookbooks" onClick={() => setIsMobileNavOpen(false)}>SS24 Afro-Futurism <span>→</span></a>
-                <a href="/#lookbooks" onClick={() => setIsMobileNavOpen(false)}>AW23 Cowhide Rebellion <span>→</span></a>
               </div>
             </div>
           </div>
@@ -370,7 +443,7 @@ export default function RootLayout({ children }) {
         <div className={`cart-drawer-overlay ${isCartOpen ? 'is-open' : ''}`} onClick={() => setIsCartOpen(false)}></div>
         <aside className={`cart-drawer ${isCartOpen ? 'is-open' : ''}`}>
           <div className="cart-drawer__header">
-            <h3 className="cart-drawer__title">Cart</h3>
+            <h3 className="cart-drawer__title">Cart ({cartCount})</h3>
             <button className="cart-drawer__close" onClick={() => setIsCartOpen(false)}>✕</button>
           </div>
 
@@ -380,8 +453,8 @@ export default function RootLayout({ children }) {
                 <p style={{ fontSize: '13px' }}>Your cart is currently empty.</p>
               </div>
             ) : (
-              cart.map(item => (
-                <div key={item.id} className="cart-item">
+              cart.map((item, idx) => (
+                <div key={`${item.id}-${item.size}-${idx}`} className="cart-item">
                   <img className="cart-item__image" src={item.image} alt={item.title} />
                   <div className="cart-item__details">
                     <div>
@@ -391,9 +464,9 @@ export default function RootLayout({ children }) {
                     </div>
 
                     <div className="cart-item__quantity-controls">
-                      <button className="qty-btn" onClick={() => updateQuantity(item.id, -1)}>-</button>
+                      <button className="qty-btn" onClick={() => updateQuantity(item.id, item.size, -1)}>-</button>
                       <span>{item.quantity}</span>
-                      <button className="qty-btn" onClick={() => updateQuantity(item.id, 1)}>+</button>
+                      <button className="qty-btn" onClick={() => updateQuantity(item.id, item.size, 1)}>+</button>
                     </div>
                   </div>
                 </div>
@@ -406,12 +479,206 @@ export default function RootLayout({ children }) {
               <span>Subtotal</span>
               <span>{formatPrice(cartTotal)}</span>
             </div>
-            <p style={{ fontSize: '11px', color: '#666', marginBottom: '12px' }}>Taxes and shipping calculated at checkout</p>
-            <button className="btn-hero-action" style={{ width: '100%' }} onClick={() => alert('Proceeding to Checkout...')}>
-              Check out
+            <p style={{ fontSize: '11px', color: '#666', marginBottom: '12px' }}>Free Worldwide Express Delivery on orders over €500</p>
+            <button 
+              className="btn-hero-action" 
+              style={{ width: '100%', background: '#000', color: '#fff' }} 
+              onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }}
+              disabled={!cart.length}
+            >
+              Check Out — Express Payment
             </button>
           </div>
         </aside>
+
+        {/* CHECKOUT MODAL */}
+        {isCheckoutOpen && (
+          <div className="modal-overlay is-open" onClick={(e) => e.target.classList.contains('modal-overlay') && setIsCheckoutOpen(false)}>
+            <div className="modal-content" style={{ maxWidth: '800px' }}>
+              <span className="modal-close-btn" onClick={() => setIsCheckoutOpen(false)}>✕</span>
+              <h2 className="modal-title">TOKYO JAMES — Checkout & Express Shipping</h2>
+              
+              <form onSubmit={handleProcessOrder} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                
+                {/* SHIPPING DETAILS */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #ddd', paddingBottom: '4px', margin: 0 }}>
+                    1. Shipping Address
+                  </h4>
+
+                  <div>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Full Name *</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={checkoutForm.customerName} 
+                      onChange={e => setCheckoutForm({ ...checkoutForm, customerName: e.target.value })} 
+                      style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                      placeholder="e.g. Lady Victoria Spencer"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Email Address *</label>
+                    <input 
+                      type="email" 
+                      required 
+                      value={checkoutForm.email} 
+                      onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })} 
+                      style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                      placeholder="victoria@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Street Address *</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={checkoutForm.address} 
+                      onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })} 
+                      style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                      placeholder="14 Mayfair Square"
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                      <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>City *</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={checkoutForm.city} 
+                        onChange={e => setCheckoutForm({ ...checkoutForm, city: e.target.value })} 
+                        style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                        placeholder="London"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Postal Code *</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={checkoutForm.zip} 
+                        onChange={e => setCheckoutForm({ ...checkoutForm, zip: e.target.value })} 
+                        style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                        placeholder="W1J 8AJ"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* PAYMENT & ORDER SUMMARY */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #ddd', paddingBottom: '4px', margin: 0 }}>
+                    2. Payment Method
+                  </h4>
+
+                  <div style={{ background: '#fafafa', border: '1px solid #eee', padding: '12px', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '700', marginBottom: '6px' }}>Credit Card (Test Mode)</div>
+                    <input 
+                      type="text" 
+                      value={checkoutForm.cardNumber} 
+                      onChange={e => setCheckoutForm({ ...checkoutForm, cardNumber: e.target.value })} 
+                      style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontSize: '12px', marginBottom: '8px' }}
+                    />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <input type="text" value={checkoutForm.cardExp} style={{ padding: '8px', border: '1px solid #ccc', fontSize: '12px' }} />
+                      <input type="text" value={checkoutForm.cardCvc} style={{ padding: '8px', border: '1px solid #ccc', fontSize: '12px' }} />
+                    </div>
+                  </div>
+
+                  <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #ddd', paddingBottom: '4px', margin: '8px 0 0' }}>
+                    3. Order Items Summary
+                  </h4>
+
+                  <div style={{ maxHeight: '140px', overflowY: 'auto', border: '1px solid #eee', padding: '8px' }}>
+                    {cart.map((item, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '4px 0', borderBottom: '1px solid #f0f0f0' }}>
+                        <span>{item.quantity}x {item.title} (Size {item.size})</span>
+                        <span style={{ fontWeight: '700' }}>{formatPrice(item.priceEUR * item.quantity)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ borderTop: '2px solid #000', paddingTop: '8px', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700' }}>
+                      <span>Total Amount</span>
+                      <span style={{ color: '#d00000' }}>{formatPrice(cartTotal)}</span>
+                    </div>
+                    <span style={{ fontSize: '10px', color: '#666' }}>Includes Express Shipping & Import VAT</span>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={isSubmittingOrder}
+                    style={{ background: '#d00000', color: '#fff', border: 'none', padding: '14px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', marginTop: '8px' }}
+                  >
+                    {isSubmittingOrder ? 'Processing Payment...' : 'Complete Order →'}
+                  </button>
+
+                </div>
+
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ORDER CONFIRMATION RECEIPT SCREEN */}
+        {completedOrder && (
+          <div className="modal-overlay is-open" onClick={() => setCompletedOrder(null)}>
+            <div className="modal-content" style={{ maxWidth: '580px', textAlign: 'center' }}>
+              <span className="modal-close-btn" onClick={() => setCompletedOrder(null)}>✕</span>
+              
+              <div style={{ background: '#22c55e', color: '#fff', width: '56px', height: '56px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', marginBottom: '16px' }}>
+                ✓
+              </div>
+
+              <h2 style={{ fontSize: '22px', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px 0' }}>
+                Order Confirmed!
+              </h2>
+
+              <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
+                Thank you for your purchase, <strong>{completedOrder.customerName}</strong>. Your TOKYO JAMES order has been placed.
+              </p>
+
+              <div style={{ background: '#fafafa', border: '1px solid #000', padding: '20px', textAlign: 'left', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' }}>Receipt Number</span>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#d00000' }}>{completedOrder.id}</span>
+                </div>
+
+                <div style={{ fontSize: '12px', marginBottom: '12px' }}>
+                  <strong>Shipping Address:</strong><br />
+                  {completedOrder.shippingAddress}
+                </div>
+
+                <div style={{ fontSize: '12px', marginBottom: '12px' }}>
+                  <strong>Items Ordered:</strong>
+                  {completedOrder.items.map((it, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', color: '#444', marginTop: '4px' }}>
+                      <span>• {it.quantity}x {it.title} (Size {it.size})</span>
+                      <span>€ {(it.priceEUR * it.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ borderTop: '1px solid #000', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700' }}>
+                  <span>Total Paid</span>
+                  <span>€ {completedOrder.totalEUR.toFixed(2).replace('.', ',')}</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setCompletedOrder(null)}
+                style={{ background: '#000', color: '#fff', border: 'none', padding: '12px 28px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Continue Shopping
+              </button>
+
+            </div>
+          </div>
+        )}
 
         {/* SEARCH OVERLAY */}
         <div className={`search-overlay ${isSearchOpen ? 'is-open' : ''}`}>

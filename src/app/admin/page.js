@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 
 export default function AdminDashboardPage() {
+  const [activeTab, setActiveTab] = useState('products'); // 'products', 'orders'
   const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,6 +29,7 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     fetchProducts();
+    fetchOrders();
   }, []);
 
   const fetchProducts = async () => {
@@ -39,6 +42,16 @@ export default function AdminDashboardPage() {
       console.error('Error loading products:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('/api/orders');
+      const data = await res.json();
+      if (data.success) setOrders(data.data);
+    } catch (err) {
+      console.error('Error loading orders:', err);
     }
   };
 
@@ -104,7 +117,6 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Direct File Upload Handler
   const handleFileUpload = async (e, fieldType) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -132,7 +144,6 @@ export default function AdminDashboardPage() {
         alert('Upload failed: ' + result.message);
       }
     } catch (err) {
-      // Base64 fallback if upload route unavailable
       const reader = new FileReader();
       reader.onload = (uploadEvent) => {
         const base64Url = uploadEvent.target.result;
@@ -210,18 +221,19 @@ export default function AdminDashboardPage() {
   );
 
   const totalCatalogValue = products.reduce((sum, p) => sum + (p.priceEUR || 0), 0);
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalEUR || 0), 0);
 
   return (
     <div style={{ padding: '32px 24px', maxWidth: '1400px', margin: '0 auto' }}>
       
       {/* DASHBOARD HEADER & QUICK ACTIONS */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            E-Commerce Product & Inventory Manager
+            Store Control & Order Management
           </h1>
           <p style={{ color: '#71717a', fontSize: '13px', marginTop: '4px' }}>
-            Upload product images, set prices, manage bespoke inventory, and update store badges.
+            Manage store inventory, upload fashion media, and process client test orders.
           </p>
         </div>
 
@@ -262,138 +274,239 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* METRICS CARDS */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '36px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         <div style={{ background: '#121215', border: '1px solid #27272a', padding: '20px', borderRadius: '8px' }}>
           <span style={{ fontSize: '12px', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Products</span>
           <div style={{ fontSize: '28px', fontWeight: '700', marginTop: '8px', color: '#ffffff' }}>{products.length}</div>
         </div>
 
         <div style={{ background: '#121215', border: '1px solid #27272a', padding: '20px', borderRadius: '8px' }}>
-          <span style={{ fontSize: '12px', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px' }}>Bespoke Tailoring Items</span>
+          <span style={{ fontSize: '12px', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px' }}>Received Orders</span>
+          <div style={{ fontSize: '28px', fontWeight: '700', marginTop: '8px', color: '#22c55e' }}>
+            {orders.length}
+          </div>
+        </div>
+
+        <div style={{ background: '#121215', border: '1px solid #27272a', padding: '20px', borderRadius: '8px' }}>
+          <span style={{ fontSize: '12px', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Store Revenue</span>
           <div style={{ fontSize: '28px', fontWeight: '700', marginTop: '8px', color: '#d00000' }}>
-            {products.filter(p => p.category === 'tailoring').length}
+            € {totalRevenue.toFixed(2).replace('.', ',')}
           </div>
         </div>
 
         <div style={{ background: '#121215', border: '1px solid #27272a', padding: '20px', borderRadius: '8px' }}>
           <span style={{ fontSize: '12px', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px' }}>Catalog Total Value</span>
-          <div style={{ fontSize: '28px', fontWeight: '700', marginTop: '8px', color: '#ffffff' }}>
+          <div style={{ fontSize: '24px', fontWeight: '700', marginTop: '8px', color: '#ffffff' }}>
             € {totalCatalogValue.toFixed(2).replace('.', ',')}
           </div>
         </div>
-
-        <div style={{ background: '#121215', border: '1px solid #27272a', padding: '20px', borderRadius: '8px' }}>
-          <span style={{ fontSize: '12px', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px' }}>Media Upload Engine</span>
-          <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '12px', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            ✓ File Uploads Active
-          </div>
-        </div>
       </div>
 
-      {/* INVENTORY TABLE */}
-      <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', padding: '24px' }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
-            Live Inventory Catalog
-          </h2>
+      {/* TABS NAVIGATION */}
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', borderBottom: '1px solid #27272a' }}>
+        <button 
+          onClick={() => setActiveTab('products')}
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            borderBottom: activeTab === 'products' ? '2px solid #d00000' : 'none', 
+            color: activeTab === 'products' ? '#fff' : '#a1a1aa', 
+            padding: '12px 16px', 
+            fontSize: '13px', 
+            fontWeight: '700', 
+            textTransform: 'uppercase', 
+            cursor: 'pointer' 
+          }}
+        >
+          Inventory Catalog ({products.length})
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('orders')}
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            borderBottom: activeTab === 'orders' ? '2px solid #d00000' : 'none', 
+            color: activeTab === 'orders' ? '#fff' : '#a1a1aa', 
+            padding: '12px 16px', 
+            fontSize: '13px', 
+            fontWeight: '700', 
+            textTransform: 'uppercase', 
+            cursor: 'pointer' 
+          }}
+        >
+          Customer Orders ({orders.length})
+        </button>
+      </div>
+
+      {/* TAB 1: INVENTORY TABLE */}
+      {activeTab === 'products' && (
+        <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', padding: '24px' }}>
           
-          <input 
-            type="text" 
-            placeholder="Search inventory..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ 
-              background: '#18181b', 
-              border: '1px solid #3f3f46', 
-              color: '#fff', 
-              padding: '8px 14px', 
-              borderRadius: '6px', 
-              fontSize: '13px', 
-              width: '260px',
-              outline: 'none'
-            }}
-          />
-        </div>
-
-        {loading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#71717a' }}>Loading Inventory...</div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #27272a', color: '#a1a1aa', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}>
-                  <th style={{ padding: '12px' }}>Image</th>
-                  <th style={{ padding: '12px' }}>Title</th>
-                  <th style={{ padding: '12px' }}>Category</th>
-                  <th style={{ padding: '12px' }}>Price (EUR)</th>
-                  <th style={{ padding: '12px' }}>Badge</th>
-                  <th style={{ padding: '12px' }}>Stock Status</th>
-                  <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProducts.map(p => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid #1c1c21' }}>
-                    <td style={{ padding: '12px' }}>
-                      <img src={p.primaryImage} alt={p.title} style={{ width: '48px', height: '60px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #27272a' }} />
-                    </td>
-                    <td style={{ padding: '12px', fontWeight: '600', color: '#fff' }}>
-                      <a href={`/product/${p.id}`} target="_blank" style={{ color: '#fff', textDecoration: 'none' }}>
-                        {p.title} ↗
-                      </a>
-                    </td>
-                    <td style={{ padding: '12px', color: '#a1a1aa' }}>{p.categoryName}</td>
-                    <td style={{ padding: '12px', fontWeight: '700', color: '#d00000' }}>
-                      € {p.priceEUR.toFixed(2).replace('.', ',')}
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      {p.badge ? (
-                        <span style={{ background: '#27272a', color: '#fff', padding: '2px 6px', fontSize: '10px', borderRadius: '3px', textTransform: 'uppercase' }}>
-                          {p.badge}
-                        </span>
-                      ) : '—'}
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      <button 
-                        onClick={() => handleToggleStock(p)}
-                        style={{ 
-                          background: p.inStock !== false ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: p.inStock !== false ? '#22c55e' : '#ef4444',
-                          border: `1px solid ${p.inStock !== false ? '#22c55e' : '#ef4444'}`,
-                          padding: '4px 10px',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {p.inStock !== false ? '● In Stock' : '✕ Out of Stock'}
-                      </button>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                      <button 
-                        onClick={() => handleEdit(p)}
-                        style={{ background: '#27272a', color: '#fff', border: '1px solid #3f3f46', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', marginRight: '8px', cursor: 'pointer' }}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(p.id)}
-                        style={{ background: 'rgba(208, 0, 0, 0.2)', color: '#ef4444', border: '1px solid #d00000', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
+              Garment Inventory Catalog
+            </h2>
+            
+            <input 
+              type="text" 
+              placeholder="Search inventory..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ 
+                background: '#18181b', 
+                border: '1px solid #3f3f46', 
+                color: '#fff', 
+                padding: '8px 14px', 
+                borderRadius: '6px', 
+                fontSize: '13px', 
+                width: '260px',
+                outline: 'none'
+              }}
+            />
           </div>
-        )}
-      </div>
 
-      {/* CREATE / EDIT PRODUCT MODAL WITH FILE UPLOAD */}
+          {loading ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#71717a' }}>Loading Inventory...</div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #27272a', color: '#a1a1aa', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}>
+                    <th style={{ padding: '12px' }}>Image</th>
+                    <th style={{ padding: '12px' }}>Title</th>
+                    <th style={{ padding: '12px' }}>Category</th>
+                    <th style={{ padding: '12px' }}>Price (EUR)</th>
+                    <th style={{ padding: '12px' }}>Badge</th>
+                    <th style={{ padding: '12px' }}>Stock Status</th>
+                    <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map(p => (
+                    <tr key={p.id} style={{ borderBottom: '1px solid #1c1c21' }}>
+                      <td style={{ padding: '12px' }}>
+                        <img src={p.primaryImage} alt={p.title} style={{ width: '48px', height: '60px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #27272a' }} />
+                      </td>
+                      <td style={{ padding: '12px', fontWeight: '600', color: '#fff' }}>
+                        <a href={`/product/${p.id}`} target="_blank" style={{ color: '#fff', textDecoration: 'none' }}>
+                          {p.title} ↗
+                        </a>
+                      </td>
+                      <td style={{ padding: '12px', color: '#a1a1aa' }}>{p.categoryName}</td>
+                      <td style={{ padding: '12px', fontWeight: '700', color: '#d00000' }}>
+                        € {p.priceEUR.toFixed(2).replace('.', ',')}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        {p.badge ? (
+                          <span style={{ background: '#27272a', color: '#fff', padding: '2px 6px', fontSize: '10px', borderRadius: '3px', textTransform: 'uppercase' }}>
+                            {p.badge}
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <button 
+                          onClick={() => handleToggleStock(p)}
+                          style={{ 
+                            background: p.inStock !== false ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                            color: p.inStock !== false ? '#22c55e' : '#ef4444',
+                            border: `1px solid ${p.inStock !== false ? '#22c55e' : '#ef4444'}`,
+                            padding: '4px 10px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {p.inStock !== false ? '● In Stock' : '✕ Out of Stock'}
+                        </button>
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right' }}>
+                        <button 
+                          onClick={() => handleEdit(p)}
+                          style={{ background: '#27272a', color: '#fff', border: '1px solid #3f3f46', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', marginRight: '8px', cursor: 'pointer' }}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(p.id)}
+                          style={{ background: 'rgba(208, 0, 0, 0.2)', color: '#ef4444', border: '1px solid #d00000', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 2: CUSTOMER ORDERS TABLE */}
+      {activeTab === 'orders' && (
+        <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', padding: '24px' }}>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
+              Received Client Test Orders
+            </h2>
+            <button onClick={fetchOrders} style={{ background: '#27272a', color: '#fff', border: '1px solid #3f3f46', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+              ↻ Refresh Orders
+            </button>
+          </div>
+
+          {orders.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#71717a' }}>No test orders placed yet.</div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #27272a', color: '#a1a1aa', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}>
+                    <th style={{ padding: '12px' }}>Order ID</th>
+                    <th style={{ padding: '12px' }}>Customer Name</th>
+                    <th style={{ padding: '12px' }}>Email</th>
+                    <th style={{ padding: '12px' }}>Items Purchased</th>
+                    <th style={{ padding: '12px' }}>Total Paid</th>
+                    <th style={{ padding: '12px' }}>Shipping Address</th>
+                    <th style={{ padding: '12px' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map(order => (
+                    <tr key={order.id} style={{ borderBottom: '1px solid #1c1c21' }}>
+                      <td style={{ padding: '12px', fontWeight: '700', color: '#d00000' }}>{order.id}</td>
+                      <td style={{ padding: '12px', fontWeight: '600', color: '#fff' }}>{order.customerName}</td>
+                      <td style={{ padding: '12px', color: '#a1a1aa' }}>{order.email}</td>
+                      <td style={{ padding: '12px' }}>
+                        {order.items.map((it, idx) => (
+                          <div key={idx} style={{ fontSize: '12px', color: '#fff' }}>
+                            {it.quantity}x {it.title} (Size {it.size})
+                          </div>
+                        ))}
+                      </td>
+                      <td style={{ padding: '12px', fontWeight: '700', color: '#22c55e' }}>
+                        € {order.totalEUR.toFixed(2).replace('.', ',')}
+                      </td>
+                      <td style={{ padding: '12px', color: '#a1a1aa', fontSize: '12px', maxWidth: '240px' }}>
+                        {order.shippingAddress}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <span style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: '1px solid #22c55e', padding: '3px 8px', borderRadius: '4px', fontSize: '10px', textTransform: 'uppercase', fontWeight: '700' }}>
+                          {order.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CREATE / EDIT PRODUCT MODAL */}
       {isModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#121215', border: '1px solid #3f3f46', borderRadius: '8px', width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', color: '#fff' }}>
@@ -407,7 +520,6 @@ export default function AdminDashboardPage() {
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
-              {/* TITLE */}
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Garment Title *</label>
                 <input 
@@ -420,7 +532,6 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              {/* CATEGORY & PRICE */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Category *</label>
@@ -464,7 +575,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* ORIGINAL PRICE & BADGE */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Original Price (If Sale)</label>
@@ -490,7 +600,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* PRIMARY IMAGE FILE UPLOAD ZONE */}
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>
                   Primary Product Image (Upload File) *
@@ -513,11 +622,8 @@ export default function AdminDashboardPage() {
                     </div>
                   ) : (
                     <div>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" style={{ marginBottom: '8px' }}>
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                      </svg>
                       <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0' }}>
-                        {uploadingPrimary ? 'Uploading file...' : 'Click to upload image file from computer (JPG, PNG, WEBP)'}
+                        {uploadingPrimary ? 'Uploading file...' : 'Click to upload image file from computer'}
                       </p>
                       <input 
                         type="file" 
@@ -530,7 +636,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* SECONDARY HOVER IMAGE FILE UPLOAD ZONE */}
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>
                   Secondary Image (Hover / Model View File Upload)
@@ -553,9 +658,6 @@ export default function AdminDashboardPage() {
                     </div>
                   ) : (
                     <div>
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" style={{ marginBottom: '6px' }}>
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                      </svg>
                       <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0' }}>
                         {uploadingSecondary ? 'Uploading secondary file...' : 'Upload secondary hover view image'}
                       </p>
@@ -570,7 +672,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* DESCRIPTION */}
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Garment Description</label>
                 <textarea 
@@ -582,7 +683,6 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              {/* SUBMIT BUTTONS */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
                 <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: '#27272a', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '4px', cursor: 'pointer' }}>
                   Cancel
