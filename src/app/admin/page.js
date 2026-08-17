@@ -8,6 +8,8 @@ export default function AdminDashboardPage() {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [uploadingPrimary, setUploadingPrimary] = useState(false);
+  const [uploadingSecondary, setUploadingSecondary] = useState(false);
 
   // Form fields
   const [formData, setFormData] = useState({
@@ -102,8 +104,58 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Direct File Upload Handler
+  const handleFileUpload = async (e, fieldType) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const data = new FormData();
+    data.append('file', file);
+
+    if (fieldType === 'primary') setUploadingPrimary(true);
+    if (fieldType === 'secondary') setUploadingSecondary(true);
+
+    try {
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: data
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        if (fieldType === 'primary') {
+          setFormData(prev => ({ ...prev, primaryImage: result.url }));
+        } else {
+          setFormData(prev => ({ ...prev, secondaryImage: result.url }));
+        }
+      } else {
+        alert('Upload failed: ' + result.message);
+      }
+    } catch (err) {
+      // Base64 fallback if upload route unavailable
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        const base64Url = uploadEvent.target.result;
+        if (fieldType === 'primary') {
+          setFormData(prev => ({ ...prev, primaryImage: base64Url }));
+        } else {
+          setFormData(prev => ({ ...prev, secondaryImage: base64Url }));
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      if (fieldType === 'primary') setUploadingPrimary(false);
+      if (fieldType === 'secondary') setUploadingSecondary(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.primaryImage) {
+      alert('Please upload or select a primary product image!');
+      return;
+    }
+
     const payload = {
       ...formData,
       priceEUR: parseFloat(formData.priceEUR),
@@ -166,10 +218,10 @@ export default function AdminDashboardPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Store Inventory & Catalog Management
+            E-Commerce Product & Inventory Manager
           </h1>
           <p style={{ color: '#71717a', fontSize: '13px', marginTop: '4px' }}>
-            Manage TOKYO JAMES luxury bespoke pieces, prices, badges, and stock availability.
+            Upload product images, set prices, manage bespoke inventory, and update store badges.
           </p>
         </div>
 
@@ -204,7 +256,7 @@ export default function AdminDashboardPage() {
               letterSpacing: '1px'
             }}
           >
-            + Add New Product
+            + Upload New Product
           </button>
         </div>
       </div>
@@ -231,14 +283,14 @@ export default function AdminDashboardPage() {
         </div>
 
         <div style={{ background: '#121215', border: '1px solid #27272a', padding: '20px', borderRadius: '8px' }}>
-          <span style={{ fontSize: '12px', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px' }}>System Status</span>
-          <div style={{ fontSize: '16px', fontWeight: '600', marginTop: '12px', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            ● Operational & Live
+          <span style={{ fontSize: '12px', color: '#71717a', textTransform: 'uppercase', letterSpacing: '1px' }}>Media Upload Engine</span>
+          <div style={{ fontSize: '15px', fontWeight: '600', marginTop: '12px', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            ✓ File Uploads Active
           </div>
         </div>
       </div>
 
-      {/* INVENTORY TABLE SECTION */}
+      {/* INVENTORY TABLE */}
       <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', padding: '24px' }}>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
@@ -248,7 +300,7 @@ export default function AdminDashboardPage() {
           
           <input 
             type="text" 
-            placeholder="Filter products..." 
+            placeholder="Search inventory..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ 
@@ -271,7 +323,7 @@ export default function AdminDashboardPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #27272a', color: '#a1a1aa', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}>
-                  <th style={{ padding: '12px' }}>Preview</th>
+                  <th style={{ padding: '12px' }}>Image</th>
                   <th style={{ padding: '12px' }}>Title</th>
                   <th style={{ padding: '12px' }}>Category</th>
                   <th style={{ padding: '12px' }}>Price (EUR)</th>
@@ -341,35 +393,37 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
-      {/* CREATE / EDIT PRODUCT MODAL */}
+      {/* CREATE / EDIT PRODUCT MODAL WITH FILE UPLOAD */}
       {isModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#121215', border: '1px solid #3f3f46', borderRadius: '8px', width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', color: '#fff' }}>
+          <div style={{ background: '#121215', border: '1px solid #3f3f46', borderRadius: '8px', width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', color: '#fff' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #27272a', paddingBottom: '12px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: '700', textTransform: 'uppercase', margin: 0 }}>
-                {editingProduct ? 'Edit TOKYO JAMES Product' : 'Add New Product to Store'}
+                {editingProduct ? 'Edit TOKYO JAMES Garment' : 'Upload New Product'}
               </h2>
               <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
+              {/* TITLE */}
               <div>
-                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Product Title *</label>
+                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Garment Title *</label>
                 <input 
                   type="text" 
                   required 
                   value={formData.title} 
                   onChange={e => setFormData({ ...formData, title: e.target.value })} 
                   style={{ width: '100%', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', padding: '10px', borderRadius: '4px', fontSize: '13px', outline: 'none' }} 
-                  placeholder="e.g. Sculptural Leather Trench Coat"
+                  placeholder="e.g. Sculptural Leather Overcoat"
                 />
               </div>
 
+              {/* CATEGORY & PRICE */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Category *</label>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Category *</label>
                   <select 
                     value={formData.category} 
                     onChange={e => {
@@ -386,18 +440,18 @@ export default function AdminDashboardPage() {
                     }} 
                     style={{ width: '100%', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', padding: '10px', borderRadius: '4px', fontSize: '13px', outline: 'none' }}
                   >
-                    <option value="tailoring">Tailoring</option>
-                    <option value="jackets">Jackets</option>
-                    <option value="polos">Polos</option>
+                    <option value="tailoring">Bespoke Tailoring</option>
+                    <option value="jackets">Leather & Jackets</option>
+                    <option value="polos">Polos & Shirts</option>
                     <option value="trousers">Trousers</option>
                     <option value="knitwear">Knitwear</option>
-                    <option value="accessories">Accessories</option>
+                    <option value="accessories">Footwear & Accessories</option>
                     <option value="archive-sale">Archive Sale</option>
                   </select>
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Price EUR (€) *</label>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Price EUR (€) *</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -410,9 +464,10 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
+              {/* ORIGINAL PRICE & BADGE */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Original Price (If Sale)</label>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Original Price (If Sale)</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -424,57 +479,116 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Badge (Optional)</label>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Badge Tag</label>
                   <input 
                     type="text" 
                     value={formData.badge} 
                     onChange={e => setFormData({ ...formData, badge: e.target.value })} 
                     style={{ width: '100%', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', padding: '10px', borderRadius: '4px', fontSize: '13px', outline: 'none' }} 
-                    placeholder="e.g. Runway AW24 / Sale / Exclusive"
+                    placeholder="Runway AW24 / House Signature / Sale"
                   />
                 </div>
               </div>
 
+              {/* PRIMARY IMAGE FILE UPLOAD ZONE */}
               <div>
-                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Primary Image URL *</label>
-                <input 
-                  type="url" 
-                  required 
-                  value={formData.primaryImage} 
-                  onChange={e => setFormData({ ...formData, primaryImage: e.target.value })} 
-                  style={{ width: '100%', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', padding: '10px', borderRadius: '4px', fontSize: '13px', outline: 'none' }} 
-                  placeholder="https://images.unsplash.com/..."
-                />
+                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>
+                  Primary Product Image (Upload File) *
+                </label>
+                
+                <div style={{ border: '2px dashed #3f3f46', borderRadius: '6px', padding: '20px', textAlign: 'center', background: '#18181b', position: 'relative' }}>
+                  {formData.primaryImage ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <img src={formData.primaryImage} alt="Primary Preview" style={{ width: '80px', height: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #3f3f46' }} />
+                      <div style={{ textAlign: 'left', flexGrow: 1 }}>
+                        <span style={{ fontSize: '12px', color: '#22c55e', fontWeight: '700', display: 'block' }}>✓ Image Ready</span>
+                        <span style={{ fontSize: '11px', color: '#71717a', wordBreak: 'break-all' }}>{formData.primaryImage}</span>
+                        <div style={{ marginTop: '8px' }}>
+                          <label style={{ background: '#27272a', color: '#fff', padding: '4px 10px', fontSize: '11px', borderRadius: '4px', cursor: 'pointer' }}>
+                            Change File
+                            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleFileUpload(e, 'primary')} />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" style={{ marginBottom: '8px' }}>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                      <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0' }}>
+                        {uploadingPrimary ? 'Uploading file...' : 'Click to upload image file from computer (JPG, PNG, WEBP)'}
+                      </p>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={e => handleFileUpload(e, 'primary')}
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* SECONDARY HOVER IMAGE FILE UPLOAD ZONE */}
               <div>
-                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Secondary Image URL (Hover View)</label>
-                <input 
-                  type="url" 
-                  value={formData.secondaryImage} 
-                  onChange={e => setFormData({ ...formData, secondaryImage: e.target.value })} 
-                  style={{ width: '100%', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', padding: '10px', borderRadius: '4px', fontSize: '13px', outline: 'none' }} 
-                  placeholder="https://images.unsplash.com/..."
-                />
+                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>
+                  Secondary Image (Hover / Model View File Upload)
+                </label>
+                
+                <div style={{ border: '2px dashed #3f3f46', borderRadius: '6px', padding: '20px', textAlign: 'center', background: '#18181b', position: 'relative' }}>
+                  {formData.secondaryImage ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <img src={formData.secondaryImage} alt="Secondary Preview" style={{ width: '80px', height: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #3f3f46' }} />
+                      <div style={{ textAlign: 'left', flexGrow: 1 }}>
+                        <span style={{ fontSize: '12px', color: '#22c55e', fontWeight: '700', display: 'block' }}>✓ Secondary Image Ready</span>
+                        <span style={{ fontSize: '11px', color: '#71717a', wordBreak: 'break-all' }}>{formData.secondaryImage}</span>
+                        <div style={{ marginTop: '8px' }}>
+                          <label style={{ background: '#27272a', color: '#fff', padding: '4px 10px', fontSize: '11px', borderRadius: '4px', cursor: 'pointer' }}>
+                            Change File
+                            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleFileUpload(e, 'secondary')} />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" style={{ marginBottom: '6px' }}>
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                      </svg>
+                      <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0' }}>
+                        {uploadingSecondary ? 'Uploading secondary file...' : 'Upload secondary hover view image'}
+                      </p>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={e => handleFileUpload(e, 'secondary')}
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* DESCRIPTION */}
               <div>
-                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Description</label>
+                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Garment Description</label>
                 <textarea 
                   rows={3} 
                   value={formData.description} 
                   onChange={e => setFormData({ ...formData, description: e.target.value })} 
                   style={{ width: '100%', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', padding: '10px', borderRadius: '4px', fontSize: '13px', outline: 'none' }} 
-                  placeholder="Enter detailed garment description..."
+                  placeholder="Describe tailoring, craftsmanship, materials..."
                 />
               </div>
 
+              {/* SUBMIT BUTTONS */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
                 <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: '#27272a', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '4px', cursor: 'pointer' }}>
                   Cancel
                 </button>
-                <button type="submit" style={{ background: '#d00000', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', textTransform: 'uppercase' }}>
-                  {editingProduct ? 'Save Changes' : 'Create Product'}
+                <button type="submit" style={{ background: '#d00000', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  {editingProduct ? 'Save Changes' : 'Upload Product'}
                 </button>
               </div>
 
