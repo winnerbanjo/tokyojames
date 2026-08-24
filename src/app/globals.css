@@ -64,10 +64,10 @@ img, video {
 }
 
 /* ==========================================================================
-   OFFICIAL BRAND LOGO STYLING
+   OFFICIAL BRAND LOGO STYLING (ULTRA CRISP PNG)
    ========================================================================== */
 .site-header__logo-img {
-  height: clamp(22px, 3.5vw, 32px);
+  height: clamp(20px, 3.2vw, 28px);
   width: auto;
   object-fit: contain;
   display: block;
@@ -76,7 +76,7 @@ img, video {
 }
 
 .mobile-logo-img {
-  height: 24px;
+  height: 22px;
   width: auto;
   object-fit: contain;
   mix-blend-mode: multiply;

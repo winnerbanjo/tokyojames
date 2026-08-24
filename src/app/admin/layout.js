@@ -47,9 +47,9 @@ export default function AdminLayout({ children }) {
               
               <div style={{ textAlign: 'center', marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <img 
-                  src="/images/tokyo_james_logo.jpg" 
+                  src="/images/tokyo_james_logo.png" 
                   alt="TOKYO JAMES" 
-                  style={{ height: '32px', filter: 'invert(1)', mixBlendMode: 'screen', marginBottom: '8px' }} 
+                  style={{ height: '28px', filter: 'invert(1)', mixBlendMode: 'screen', marginBottom: '8px' }} 
                 />
                 <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', color: '#d00000', display: 'block' }}>
                   ADMIN CONTROL PORTAL
@@ -124,9 +124,9 @@ export default function AdminLayout({ children }) {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <img 
-                  src="/images/tokyo_james_logo.jpg" 
+                  src="/images/tokyo_james_logo.png" 
                   alt="TOKYO JAMES" 
-                  style={{ height: '24px', filter: 'invert(1)', mixBlendMode: 'screen' }} 
+                  style={{ height: '22px', filter: 'invert(1)', mixBlendMode: 'screen' }} 
                 />
                 <span style={{ background: '#d00000', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '2px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   ADMIN CONTROL CENTER

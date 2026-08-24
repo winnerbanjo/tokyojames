@@ -188,11 +188,11 @@ function LayoutInner({ children }) {
             </div>
           </nav>
 
-          {/* OFFICIAL BRAND LOGO */}
+          {/* OFFICIAL ULTRA-CLEAR BRAND LOGO */}
           <div className="site-header__logo">
             <a href="/" className="site-header__logo-link">
               <img 
-                src="/images/tokyo_james_logo.jpg" 
+                src="/images/tokyo_james_logo.png" 
                 alt="TOKYO JAMES" 
                 className="site-header__logo-img" 
               />
@@ -327,7 +327,7 @@ function LayoutInner({ children }) {
       <aside className={`mobile-nav-drawer ${isMobileNavOpen ? 'is-open' : ''}`}>
         <div className="mobile-nav-drawer__header">
           <img 
-            src="/images/tokyo_james_logo.jpg" 
+            src="/images/tokyo_james_logo.png" 
             alt="TOKYO JAMES" 
             className="mobile-logo-img" 
           />
@@ -493,7 +493,7 @@ function LayoutInner({ children }) {
             <span className="modal-close-btn" onClick={() => setIsCheckoutOpen(false)}>✕</span>
             
             <div style={{ textTransform: 'uppercase', marginBottom: '16px', borderBottom: '1px solid #000', paddingBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <img src="/images/tokyo_james_logo.jpg" alt="TOKYO JAMES" style={{ height: '22px', mixBlendMode: 'multiply' }} />
+              <img src="/images/tokyo_james_logo.png" alt="TOKYO JAMES" style={{ height: '22px', mixBlendMode: 'multiply' }} />
               <span style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '1px' }}>Express Checkout</span>
             </div>
             
