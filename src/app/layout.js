@@ -744,8 +744,20 @@ function LayoutInner({ children }) {
 
 export default function RootLayout({ children }) {
   return (
-    <CurrencyProvider>
-      <LayoutInner>{children}</LayoutInner>
-    </CurrencyProvider>
+    <html lang="en">
+      <head>
+        <title>TOKYO JAMES — Official Store</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+        <meta name="description" content="British tailoring with West African soul by Ina Adenugba. Runway collections, leather jackets, tailored outerwear, and lookbooks." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700&display=swap" rel="stylesheet" />
+      </head>
+      <body>
+        <CurrencyProvider>
+          <LayoutInner>{children}</LayoutInner>
+        </CurrencyProvider>
+      </body>
+    </html>
   );
 }
