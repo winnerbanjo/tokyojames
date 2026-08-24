@@ -64,6 +64,25 @@ img, video {
 }
 
 /* ==========================================================================
+   OFFICIAL BRAND LOGO STYLING
+   ========================================================================== */
+.site-header__logo-img {
+  height: clamp(22px, 3.5vw, 32px);
+  width: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  mix-blend-mode: multiply;
+}
+
+.mobile-logo-img {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+/* ==========================================================================
    SITE HEADER & NAVIGATION
    ========================================================================== */
 .site-header {
@@ -114,14 +133,9 @@ img, video {
 
 .site-header__logo {
   text-align: center;
-}
-
-.site-header__logo-text {
-  font-size: clamp(18px, 4vw, 26px);
-  font-weight: 700;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .site-header__nav-right {

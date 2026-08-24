@@ -41,15 +41,17 @@ export default function AdminLayout({ children }) {
       <body style={{ margin: 0, padding: 0, fontFamily: "'Helvetica Neue', sans-serif", background: '#09090b', color: '#f4f4f5' }}>
         
         {!isAuthenticated ? (
-          /* LUXURY ADMIN LOGIN PORTAL */
+          /* LUXURY ADMIN LOGIN PORTAL WITH OFFICIAL LOGO */
           <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#09090b', padding: '20px' }}>
             <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '12px', padding: '40px', width: '100%', maxWidth: '420px', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
               
-              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '4px', textTransform: 'uppercase', color: '#ffffff', margin: 0 }}>
-                  TOKYO JAMES
-                </h1>
-                <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', color: '#d00000', display: 'block', marginTop: '4px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <img 
+                  src="/images/tokyo_james_logo.jpg" 
+                  alt="TOKYO JAMES" 
+                  style={{ height: '32px', filter: 'invert(1)', mixBlendMode: 'screen', marginBottom: '8px' }} 
+                />
+                <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', color: '#d00000', display: 'block' }}>
                   ADMIN CONTROL PORTAL
                 </span>
               </div>
@@ -121,9 +123,11 @@ export default function AdminLayout({ children }) {
               zIndex: 100 
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '3px', color: '#fff' }}>
-                  TOKYO JAMES
-                </span>
+                <img 
+                  src="/images/tokyo_james_logo.jpg" 
+                  alt="TOKYO JAMES" 
+                  style={{ height: '24px', filter: 'invert(1)', mixBlendMode: 'screen' }} 
+                />
                 <span style={{ background: '#d00000', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '2px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   ADMIN CONTROL CENTER
                 </span>

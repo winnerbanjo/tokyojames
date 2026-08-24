@@ -188,9 +188,14 @@ function LayoutInner({ children }) {
             </div>
           </nav>
 
+          {/* OFFICIAL BRAND LOGO */}
           <div className="site-header__logo">
             <a href="/" className="site-header__logo-link">
-              <span className="site-header__logo-text">TOKYO JAMES</span>
+              <img 
+                src="/images/tokyo_james_logo.jpg" 
+                alt="TOKYO JAMES" 
+                className="site-header__logo-img" 
+              />
             </a>
           </div>
 
@@ -321,7 +326,11 @@ function LayoutInner({ children }) {
       <div className={`mobile-nav-overlay ${isMobileNavOpen ? 'is-open' : ''}`} onClick={() => setIsMobileNavOpen(false)}></div>
       <aside className={`mobile-nav-drawer ${isMobileNavOpen ? 'is-open' : ''}`}>
         <div className="mobile-nav-drawer__header">
-          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '3px', textTransform: 'uppercase' }}>TOKYO JAMES</span>
+          <img 
+            src="/images/tokyo_james_logo.jpg" 
+            alt="TOKYO JAMES" 
+            className="mobile-logo-img" 
+          />
           <button style={{ fontSize: '20px', cursor: 'pointer' }} onClick={() => setIsMobileNavOpen(false)}>✕</button>
         </div>
 
@@ -482,7 +491,11 @@ function LayoutInner({ children }) {
         <div className="modal-overlay is-open" onClick={(e) => e.target.classList.contains('modal-overlay') && setIsCheckoutOpen(false)}>
           <div className="modal-content" style={{ maxWidth: '800px' }}>
             <span className="modal-close-btn" onClick={() => setIsCheckoutOpen(false)}>✕</span>
-            <h2 className="modal-title">TOKYO JAMES — Express Checkout</h2>
+            
+            <div style={{ textTransform: 'uppercase', marginBottom: '16px', borderBottom: '1px solid #000', paddingBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <img src="/images/tokyo_james_logo.jpg" alt="TOKYO JAMES" style={{ height: '22px', mixBlendMode: 'multiply' }} />
+              <span style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '1px' }}>Express Checkout</span>
+            </div>
             
             <form onSubmit={handleProcessOrder} className="checkout-form-grid">
               
