@@ -477,14 +477,14 @@ function LayoutInner({ children }) {
         </div>
       </aside>
 
-      {/* CHECKOUT MODAL */}
+      {/* RESPONSIVE MOBILE CHECKOUT MODAL */}
       {isCheckoutOpen && (
         <div className="modal-overlay is-open" onClick={(e) => e.target.classList.contains('modal-overlay') && setIsCheckoutOpen(false)}>
           <div className="modal-content" style={{ maxWidth: '800px' }}>
             <span className="modal-close-btn" onClick={() => setIsCheckoutOpen(false)}>✕</span>
-            <h2 className="modal-title">TOKYO JAMES — Checkout & Express Shipping</h2>
+            <h2 className="modal-title">TOKYO JAMES — Express Checkout</h2>
             
-            <form onSubmit={handleProcessOrder} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <form onSubmit={handleProcessOrder} className="checkout-form-grid">
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #ddd', paddingBottom: '4px', margin: 0 }}>
@@ -498,7 +498,7 @@ function LayoutInner({ children }) {
                     required 
                     value={checkoutForm.customerName} 
                     onChange={e => setCheckoutForm({ ...checkoutForm, customerName: e.target.value })} 
-                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} 
                     placeholder="e.g. Lady Victoria Spencer"
                   />
                 </div>
@@ -510,7 +510,7 @@ function LayoutInner({ children }) {
                     required 
                     value={checkoutForm.email} 
                     onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })} 
-                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} 
                     placeholder="victoria@example.com"
                   />
                 </div>
@@ -522,7 +522,7 @@ function LayoutInner({ children }) {
                     required 
                     value={checkoutForm.address} 
                     onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })} 
-                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} 
                     placeholder="14 Mayfair Square"
                   />
                 </div>
@@ -535,7 +535,7 @@ function LayoutInner({ children }) {
                       required 
                       value={checkoutForm.city} 
                       onChange={e => setCheckoutForm({ ...checkoutForm, city: e.target.value })} 
-                      style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                      style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} 
                       placeholder="London"
                     />
                   </div>
@@ -546,7 +546,7 @@ function LayoutInner({ children }) {
                       required 
                       value={checkoutForm.zip} 
                       onChange={e => setCheckoutForm({ ...checkoutForm, zip: e.target.value })} 
-                      style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none' }} 
+                      style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} 
                       placeholder="W1J 8AJ"
                     />
                   </div>
@@ -564,11 +564,11 @@ function LayoutInner({ children }) {
                     type="text" 
                     value={checkoutForm.cardNumber} 
                     onChange={e => setCheckoutForm({ ...checkoutForm, cardNumber: e.target.value })} 
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontSize: '12px', marginBottom: '8px' }}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', fontSize: '12px', marginBottom: '8px', boxSizing: 'border-box' }}
                   />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <input type="text" value={checkoutForm.cardExp} style={{ padding: '8px', border: '1px solid #ccc', fontSize: '12px' }} />
-                    <input type="text" value={checkoutForm.cardCvc} style={{ padding: '8px', border: '1px solid #ccc', fontSize: '12px' }} />
+                    <input type="text" value={checkoutForm.cardExp} style={{ padding: '8px', border: '1px solid #ccc', fontSize: '12px', boxSizing: 'border-box' }} />
+                    <input type="text" value={checkoutForm.cardCvc} style={{ padding: '8px', border: '1px solid #ccc', fontSize: '12px', boxSizing: 'border-box' }} />
                   </div>
                 </div>
 
@@ -596,7 +596,7 @@ function LayoutInner({ children }) {
                 <button 
                   type="submit" 
                   disabled={isSubmittingOrder}
-                  style={{ background: '#d00000', color: '#fff', border: 'none', padding: '14px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', marginTop: '8px' }}
+                  style={{ background: '#d00000', color: '#fff', border: 'none', padding: '14px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', marginTop: '8px', width: '100%' }}
                 >
                   {isSubmittingOrder ? 'Processing Payment...' : 'Complete Order →'}
                 </button>

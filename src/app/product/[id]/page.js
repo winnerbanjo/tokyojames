@@ -87,19 +87,19 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 20px 80px' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 16px 80px' }}>
       
       {/* BREADCRUMB */}
-      <div style={{ fontSize: '11px', textTransform: 'uppercase', color: '#666', marginBottom: '24px', letterSpacing: '1px' }}>
+      <div style={{ fontSize: '11px', textTransform: 'uppercase', color: '#666', marginBottom: '20px', letterSpacing: '1px' }}>
         <a href="/">Store</a> / <a href="/#collections">{product.categoryName}</a> / <span style={{ color: '#000', fontWeight: '700' }}>{product.title}</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'start' }}>
+      <div className="pdp-grid">
         
         {/* GALLERY IMAGES */}
         <div>
           <div style={{ border: '1px solid #000', overflow: 'hidden', background: '#f7f7f7', marginBottom: '16px' }}>
-            <img src={activeImage || product.primaryImage} alt={product.title} style={{ width: '100%', height: '580px', objectFit: 'cover' }} />
+            <img src={activeImage || product.primaryImage} alt={product.title} style={{ width: '100%', height: 'auto', maxHeight: '580px', objectFit: 'cover' }} />
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
@@ -107,21 +107,21 @@ export default function ProductDetailPage() {
               src={product.primaryImage} 
               alt="Thumb 1" 
               onClick={() => setActiveImage(product.primaryImage)}
-              style={{ width: '80px', height: '100px', objectFit: 'cover', cursor: 'pointer', border: activeImage === product.primaryImage ? '2px solid #000' : '1px solid #ddd' }} 
+              style={{ width: '70px', height: '90px', objectFit: 'cover', cursor: 'pointer', border: activeImage === product.primaryImage ? '2px solid #000' : '1px solid #ddd' }} 
             />
             {product.secondaryImage && (
               <img 
                 src={product.secondaryImage} 
                 alt="Thumb 2" 
                 onClick={() => setActiveImage(product.secondaryImage)}
-                style={{ width: '80px', height: '100px', objectFit: 'cover', cursor: 'pointer', border: activeImage === product.secondaryImage ? '2px solid #000' : '1px solid #ddd' }} 
+                style={{ width: '70px', height: '90px', objectFit: 'cover', cursor: 'pointer', border: activeImage === product.secondaryImage ? '2px solid #000' : '1px solid #ddd' }} 
               />
             )}
           </div>
         </div>
 
         {/* GARMENT DETAILS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {product.badge && (
             <span style={{ display: 'inline-block', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 10px', textTransform: 'uppercase', width: 'max-content' }}>
@@ -129,7 +129,7 @@ export default function ProductDetailPage() {
             </span>
           )}
 
-          <h1 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: '700', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>
+          <h1 style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: '700', textTransform: 'uppercase', margin: 0, lineHeight: 1.1 }}>
             {product.title}
           </h1>
 
@@ -148,7 +148,7 @@ export default function ProductDetailPage() {
               <span style={{ fontSize: '11px', textDecoration: 'underline', color: '#666', cursor: 'pointer' }} onClick={() => alert('Size Guide: 46 (S), 48 (M), 50 (L), 52 (XL)')}>Size Guide</span>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {product.sizes && product.sizes.map(size => (
                 <button
                   key={size}
@@ -157,11 +157,11 @@ export default function ProductDetailPage() {
                     border: selectedSize === size ? '2px solid #000' : '1px solid #ccc',
                     background: selectedSize === size ? '#000' : '#fff',
                     color: selectedSize === size ? '#fff' : '#000',
-                    padding: '10px 18px',
+                    padding: '10px 16px',
                     fontSize: '12px',
                     fontWeight: '700',
                     cursor: 'pointer',
-                    minWidth: '54px'
+                    minWidth: '50px'
                   }}
                 >
                   {size}
@@ -191,7 +191,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* ACTION BUTTONS */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
             <button 
               onClick={handleAddToCart}
               style={{
@@ -231,7 +231,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* ACCORDION DETAILS */}
-          <div style={{ marginTop: '24px', borderTop: '1px solid #eee', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '12px' }}>
+          <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '12px' }}>
             <div>
               <strong style={{ textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>✓ Craftsmanship & Fit</strong>
               Hand-tailored according to Savile Row specifications with West African artisanal embellishment. Model is 188cm wearing size 48.
