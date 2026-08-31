@@ -10,6 +10,13 @@ function LayoutInner({ children }) {
     { id: 'tj-1', title: 'Sculptural Cowhide-Panelled Wool Blazer', size: '48', priceEUR: 1850.00, quantity: 1, image: '/images/tj_drive_4.jpg' }
   ]);
 
+  const [siteContent, setSiteContent] = useState({
+    about: { title: 'About TOKYO JAMES', paragraph1: 'Representing the fusion of music, literary, culinary and origins...', paragraph2: 'Ina Adenugba is the creative force...' },
+    manifesto: { title: 'The Manifesto', quote: 'At TOKYO JAMES we care...', subtext: 'Speaking up and acting for cultural identity...' },
+    sustainability: { title: 'Craftsmanship & Sustainability', headline: 'Giving back through fashion...', paragraph: 'We are truly connected to our narrative...' },
+    footer: { vatNumber: 'VAT: UK080129472', copyrightText: '© 2026, TOKYO JAMES World London • Lagos • Paris', contactEmail: 'concierge@tokyojames.com', instagramUrl: 'https://instagram.com' }
+  });
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -42,6 +49,13 @@ function LayoutInner({ children }) {
         if (data.success) setProducts(data.data);
       })
       .catch(err => console.error('Error fetching products:', err));
+
+    fetch('/api/content')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) setSiteContent(data.data);
+      })
+      .catch(err => console.error('Error fetching dynamic site content:', err));
   }, []);
 
   // Listen for custom add to cart & buy now events from Product Detail Page
@@ -389,7 +403,7 @@ function LayoutInner({ children }) {
               <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); }}>About</a></li>
               <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); }}>Sustainability</a></li>
               <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); }}>Manifesto</a></li>
-              <li><a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a></li>
+              <li><a href={siteContent.footer?.instagramUrl || "https://instagram.com"} target="_blank" rel="noopener">Instagram</a></li>
             </ul>
           </div>
 
@@ -400,7 +414,7 @@ function LayoutInner({ children }) {
               <li><a href="#" onClick={(e) => { e.preventDefault(); alert('Terms of Service: Official TOKYO JAMES terms.'); }}>Terms of Service</a></li>
               <li><a href="#" onClick={(e) => { e.preventDefault(); alert('Shipping Policy: Free worldwide express shipping.'); }}>Shipping Policy</a></li>
               <li><a href="#" onClick={(e) => { e.preventDefault(); alert('Refund Policy: 14-day hassle free returns.'); }}>Refund Policy</a></li>
-              <li><a href="#" onClick={(e) => { e.preventDefault(); alert('Contact: concierge@tokyojames.com'); }}>Contact</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); alert(`Contact Concierge: ${siteContent.footer?.contactEmail || 'concierge@tokyojames.com'}`); }}>Contact</a></li>
             </ul>
           </div>
 
@@ -430,7 +444,7 @@ function LayoutInner({ children }) {
         </div>
 
         <div className="site-footer__copyright">
-          <small>&copy; 2026, <a href="/">TOKYO JAMES World</a> London • Lagos • Paris, VAT: UK080129472</small>
+          <small>{siteContent.footer?.copyrightText || '© 2026, TOKYO JAMES World London • Lagos • Paris'}, {siteContent.footer?.vatNumber || 'VAT: UK080129472'}</small>
         </div>
       </footer>
 
@@ -707,18 +721,14 @@ function LayoutInner({ children }) {
         </div>
       </div>
 
-      {/* MODALS */}
+      {/* DYNAMIC EDITABLE MODALS */}
       <div className={`modal-overlay ${activeModal === 'about' ? 'is-open' : ''}`} onClick={(e) => e.target.classList.contains('modal-overlay') && setActiveModal(null)}>
         <div className="modal-content">
           <span className="modal-close-btn" onClick={() => setActiveModal(null)}>✕</span>
-          <h2 className="modal-title">About TOKYO JAMES</h2>
+          <h2 className="modal-title">{siteContent.about?.title || 'About TOKYO JAMES'}</h2>
           <div className="modal-body">
-            <p>
-              Representing the fusion of music, literary, culinary and origins, that all together forms the rich and hybrid African and British culture. <strong>TOKYO JAMES</strong>’s identity combines its ‘Caribbean & African Couture’ spirit, as well as its glance towards Arte Povera’s philosophy, together with a strong sustainability consciousness.
-            </p>
-            <p>
-              Ina Adenugba is the creative force behind TOKYO JAMES. The designer combines multicultural influences and mastery of tailoring to infuse the label with a distinct notion of luxury. Edgy yet inclusive, creative sight is an extension of personality.
-            </p>
+            <p>{siteContent.about?.paragraph1}</p>
+            <p>{siteContent.about?.paragraph2}</p>
           </div>
         </div>
       </div>
@@ -726,14 +736,10 @@ function LayoutInner({ children }) {
       <div className={`modal-overlay ${activeModal === 'manifesto' ? 'is-open' : ''}`} onClick={(e) => e.target.classList.contains('modal-overlay') && setActiveModal(null)}>
         <div className="modal-content">
           <span className="modal-close-btn" onClick={() => setActiveModal(null)}>✕</span>
-          <h2 className="modal-title">Manifesto</h2>
+          <h2 className="modal-title">{siteContent.manifesto?.title || 'The Manifesto'}</h2>
           <div className="modal-body">
-            <blockquote>
-              "At TOKYO JAMES we care. We care about fashion, as the golden daughter of all arts. We care about nature, as the golden mother of all arts. Without nature, no arts, nothing."
-            </blockquote>
-            <p>
-              Speaking up and acting for cultural identity and environment is an act of respect. Giving back to nature is giving back to the world. This is the idea we have for a better world, this is the idea we have for the TOKYO JAMES world.
-            </p>
+            <blockquote>"{siteContent.manifesto?.quote}"</blockquote>
+            <p>{siteContent.manifesto?.subtext}</p>
           </div>
         </div>
       </div>
@@ -741,12 +747,10 @@ function LayoutInner({ children }) {
       <div className={`modal-overlay ${activeModal === 'sustainability' ? 'is-open' : ''}`} onClick={(e) => e.target.classList.contains('modal-overlay') && setActiveModal(null)}>
         <div className="modal-content">
           <span className="modal-close-btn" onClick={() => setActiveModal(null)}>✕</span>
-          <h2 className="modal-title">Sustainability</h2>
+          <h2 className="modal-title">{siteContent.sustainability?.title || 'Craftsmanship & Sustainability'}</h2>
           <div className="modal-body">
-            <p><strong>Giving back through fashion and zero-waste tailoring</strong></p>
-            <p>
-              We are truly connected to our narrative, telling an honest story through our brand and our creations. TOKYO JAMES's collections are run on a Solar punk mindset where technology is leading and emotion and storytelling are vital.
-            </p>
+            <p><strong>{siteContent.sustainability?.headline}</strong></p>
+            <p>{siteContent.sustainability?.paragraph}</p>
           </div>
         </div>
       </div>

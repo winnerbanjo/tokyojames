@@ -9,6 +9,12 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [activeVideoUrl, setActiveVideoUrl] = useState('');
+  const [heroContent, setHeroContent] = useState({
+    headline: 'DARK WATERS AW24',
+    subheadline: 'The New Autumn / Winter Runway Collection by Ina Adenugba',
+    primaryBtnText: 'Details',
+    secondaryBtnText: 'Full Look Video'
+  });
 
   useEffect(() => {
     fetch('/api/products')
@@ -17,6 +23,15 @@ export default function HomePage() {
         if (data.success) setProducts(data.data);
       })
       .catch(err => console.error('Error loading products:', err));
+
+    fetch('/api/content')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data?.hero) {
+          setHeroContent(data.data.hero);
+        }
+      })
+      .catch(err => console.error('Error loading hero content:', err));
   }, []);
 
   const filteredProducts = activeCategory === 'all'
@@ -45,44 +60,39 @@ export default function HomePage() {
         <div className="video-section__overlay"></div>
 
         <div className="video-section__content">
-          <h1 className="video-section__title">DARK WATERS AW24</h1>
+          <h1 className="video-section__title">{heroContent.headline || 'DARK WATERS AW24'}</h1>
           <div className="video-section__actions">
             <a href="/#collections" className="btn-hero-action">
-              Details
+              {heroContent.primaryBtnText || 'Details'}
             </a>
             <button 
               className="btn-hero-action" 
               onClick={() => openVideo('/videos/tj_campaign_3.mp4')}
             >
-              Full Look Video
+              {heroContent.secondaryBtnText || 'Full Look Video'}
             </button>
           </div>
         </div>
       </section>
 
-      {/* CURRENT COLLECTION BANNER */}
-      <section className="hero-banner__image-wrapper" id="section-collection-banner">
+      {/* BANNER 2: FW23 RUNWAY */}
+      <section className="hero-banner__image-wrapper">
         <img 
-          src="/images/tj_drive_6.jpg" 
+          src="/images/tj_drive_1.jpg" 
           alt="Current Collection FW23" 
           className="hero-banner__img" 
         />
         <div className="hero-banner__overlay"></div>
-
         <div className="hero-banner__content">
           <h2 className="hero-banner__title">Current Collection FW23</h2>
-          <div className="hero-banner__actions">
-            <a href="/#collections" className="btn-hero-action">
-              Shop now
-            </a>
-          </div>
+          <a href="/#collections" className="btn-hero-action">
+            Shop now
+          </a>
         </div>
       </section>
 
-      {/* PRODUCT COLLECTION GRID WITH DYNAMIC CURRENCY */}
+      {/* COLLECTION GRID & FILTER TABS */}
       <section className="collection-section" id="collections">
-        
-        {/* FILTER TABS */}
         <div className="collection-tabs-scroll-container">
           <div className="collection-tabs-scroll">
             <button 
@@ -128,107 +138,110 @@ export default function HomePage() {
               Accessories
             </button>
             <button 
-              className={`tab-btn-pill ${activeCategory === 'archive-sale' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('archive-sale')}
+              className={`tab-btn-pill ${activeCategory === 'sale' ? 'active' : ''}`}
+              onClick={() => setActiveCategory('sale')}
+              style={{ color: 'var(--color-sale)' }}
             >
               Archive sale
             </button>
           </div>
         </div>
 
-        {/* RESPONSIVE PRODUCT GRID */}
         <div className="product-grid">
-          {filteredProducts.map(product => (
-            <div key={product.id} className="grid-view-item">
-              <a href={`/product/${product.id}`} className="grid-view-item__link">
-                
+          {filteredProducts.map(p => (
+            <div key={p.id} className="grid-view-item">
+              <a href={`/product/${p.id}`}>
                 <div className="grid-view-item__image-wrapper">
-                  {product.badge && (
-                    <span className={`badge ${product.badgeClass || ''}`}>
-                      {product.badge}
+                  {p.badge && (
+                    <span className={`badge ${p.badgeClass}`}>
+                      {p.badge}
                     </span>
                   )}
                   <img 
-                    src={product.primaryImage} 
-                    alt={product.title} 
+                    src={p.primaryImage} 
+                    alt={p.title} 
                     className="grid-view-item__image primary" 
                   />
                   <img 
-                    src={product.secondaryImage || product.primaryImage} 
-                    alt={`${product.title} hover`} 
+                    src={p.secondaryImage || p.primaryImage} 
+                    alt={p.title} 
                     className="grid-view-item__image secondary" 
                   />
                 </div>
-
-                <div className="grid-view-item__meta">
-                  <h3 className="grid-view-item__title">{product.title}</h3>
-                  <div className="product-price">
-                    {product.originalPriceEUR && (
-                      <span className="product-price__sale">{formatPrice(product.originalPriceEUR)}</span>
-                    )}
-                    <span>{formatPrice(product.priceEUR)}</span>
-                  </div>
-                </div>
-
               </a>
+
+              <div className="grid-view-item__meta">
+                <a href={`/product/${p.id}`} className="grid-view-item__title">
+                  {p.title}
+                </a>
+
+                <div className="product-price">
+                  {p.originalPriceEUR ? (
+                    <>
+                      <span className="product-price__sale">
+                        {formatPrice(p.originalPriceEUR)}
+                      </span>
+                      <span style={{ color: 'var(--color-sale)' }}>
+                        {formatPrice(p.priceEUR)}
+                      </span>
+                    </>
+                  ) : (
+                    <span>{formatPrice(p.priceEUR)}</span>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
-
       </section>
 
-      {/* BRAND WORLD BANNER */}
-      <section className="brand-world-container" id="section-world">
+      {/* BRAND WORLD VIDEO BANNER */}
+      <section className="brand-world-container">
         <video 
           className="brand-world__bg-video" 
           autoPlay 
           muted 
           loop 
           playsInline 
-          poster="/images/tj_drive_5.jpg"
+          poster="/images/tj_drive_2.jpg"
         >
-          <source src="/videos/tj_campaign_4.mp4" type="video/mp4" />
+          <source src="/videos/tj_campaign_2.mp4" type="video/mp4" />
         </video>
         <div className="brand-world__overlay"></div>
 
         <div className="brand-world__content">
           <h2 className="brand-world__title">TOKYO JAMES World WE CARE</h2>
-          <div className="brand-world__actions">
-            <button 
-              className="btn-hero-action" 
-              onClick={() => openVideo('/videos/tj_campaign_4.mp4')}
-            >
-              Read our Manifesto
-            </button>
-          </div>
+          <button className="btn-hero-action" onClick={() => openVideo('/videos/tj_campaign_2.mp4')}>
+            Read our Manifesto
+          </button>
         </div>
       </section>
 
-      {/* RUNWAY LOOKBOOKS */}
+      {/* RUNWAY LOOKBOOK ARCHIVE GRID */}
       <section className="lookbook-archive-section" id="lookbooks">
         <div className="section-header-title">
           <h2>Runway Lookbook Archives</h2>
         </div>
 
         <div className="lookbook-archive-grid">
-          <div className="lookbook-card" onClick={() => openVideo('/videos/tj_campaign_3.mp4')}>
-            <img src="/images/tj_drive_6.jpg" alt="DARK WATERS AW24" />
+          <div className="lookbook-card" onClick={() => openVideo('/videos/tj_campaign_1.mp4')}>
+            <img src="/images/tj_drive_3.jpg" alt="Dark Waters AW24" />
             <div className="lookbook-card__info">
               <span className="lookbook-card__tag">AUTUMN / WINTER 2024</span>
               <h3>DARK WATERS AW24</h3>
             </div>
           </div>
 
-          <div className="lookbook-card" onClick={() => openVideo('/videos/tj_campaign_4.mp4')}>
-            <img src="/images/tj_drive_7.jpg" alt="AFRO-FUTURISM SS24" />
+          <div className="lookbook-card" onClick={() => openVideo('/videos/tj_campaign_2.mp4')}>
+            <img src="/images/tj_drive_5.jpg" alt="Afro-Futurism SS24" />
             <div className="lookbook-card__info">
               <span className="lookbook-card__tag">SPRING / SUMMER 2024</span>
               <h3>AFRO-FUTURISM SS24</h3>
             </div>
           </div>
 
-          <div className="lookbook-card" onClick={() => openVideo('/videos/tj_campaign_5.mp4')}>
-            <img src="/images/tj_drive_5.jpg" alt="COWHIDE REBELLION AW23" />
+          <div className="lookbook-card" onClick={() => openVideo('/videos/tj_campaign_3.mp4')}>
+            <img src="/images/tj_drive_6.jpg" alt="Cowhide Rebellion AW23" />
             <div className="lookbook-card__info">
               <span className="lookbook-card__tag">AUTUMN / WINTER 2023</span>
               <h3>COWHIDE REBELLION AW23</h3>
@@ -237,17 +250,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* VIDEO MODAL */}
+      {/* VIDEO LIGHTBOX MODAL */}
       {isVideoModalOpen && (
-        <div className="modal-overlay is-open" onClick={() => setIsVideoModalOpen(false)}>
-          <div style={{ width: '100%', maxWidth: '900px', margin: 'auto', position: 'relative', background: '#000', padding: '10px' }}>
+        <div 
+          className="modal-overlay is-open" 
+          onClick={() => setIsVideoModalOpen(false)}
+        >
+          <div 
+            className="modal-content" 
+            style={{ maxWidth: '960px', background: '#000', padding: '0', overflow: 'hidden' }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <span 
+              className="modal-close-btn" 
+              style={{ color: '#fff', top: '12px', right: '16px', zIndex: 10 }} 
               onClick={() => setIsVideoModalOpen(false)}
-              style={{ position: 'absolute', top: '-30px', right: '0', color: '#fff', fontSize: '24px', cursor: 'pointer', zIndex: 10 }}
             >
               ✕
             </span>
-            <video controls autoPlay style={{ width: '100%', maxHeight: '80vh' }}>
+            <video controls autoPlay style={{ width: '100%', height: 'auto', display: 'block' }}>
               <source src={activeVideoUrl} type="video/mp4" />
             </video>
           </div>
