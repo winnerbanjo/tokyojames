@@ -2,9 +2,13 @@
 
 import './globals.css';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { CurrencyProvider, useCurrency } from '@/context/CurrencyContext';
 
 function LayoutInner({ children }) {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith('/admin');
+
   const { currency, setCurrency, formatPrice } = useCurrency();
   const [cart, setCart] = useState([
     { id: 'tj-1', title: 'Sculptural Cowhide-Panelled Wool Blazer', size: '48', priceEUR: 1850.00, quantity: 1, image: '/images/tj_drive_4.jpg' }
@@ -170,6 +174,11 @@ function LayoutInner({ children }) {
       alert('Subscribed to TOKYO JAMES archives!');
     }
   };
+
+  // IF ADMIN ROUTE, DO NOT RENDER PUBLIC STOREFRONT HEADER OR FOOTER
+  if (isAdmin) {
+    return <main id="MainContent">{children}</main>;
+  }
 
   return (
     <>
