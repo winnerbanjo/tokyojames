@@ -32,11 +32,11 @@ export default function ProductDetailPage() {
   }, [params]);
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
+    if (!product.inStock || !selectedSize) {
       alert('Please select a size first!');
       return;
     }
-    
+
     const event = new CustomEvent('tj-add-to-cart', {
       detail: {
         id: product.id,
@@ -51,11 +51,11 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
-    if (!selectedSize) {
+    if (!product.inStock || !selectedSize) {
       alert('Please select a size first!');
       return;
     }
-    
+
     const event = new CustomEvent('tj-buy-now', {
       detail: {
         id: product.id,
@@ -88,14 +88,14 @@ export default function ProductDetailPage() {
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 16px 80px' }}>
-      
+
       {/* BREADCRUMB */}
       <div style={{ fontSize: '11px', textTransform: 'uppercase', color: '#666', marginBottom: '20px', letterSpacing: '1px' }}>
         <a href="/">Store</a> / <a href="/#collections">{product.categoryName}</a> / <span style={{ color: '#000', fontWeight: '700' }}>{product.title}</span>
       </div>
 
       <div className="pdp-grid">
-        
+
         {/* GALLERY IMAGES */}
         <div>
           <div style={{ border: '1px solid #000', overflow: 'hidden', background: '#f7f7f7', marginBottom: '16px' }}>
@@ -103,18 +103,18 @@ export default function ProductDetailPage() {
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
-            <img 
-              src={product.primaryImage} 
-              alt="Thumb 1" 
+            <img
+              src={product.primaryImage}
+              alt="Thumb 1"
               onClick={() => setActiveImage(product.primaryImage)}
-              style={{ width: '70px', height: '90px', objectFit: 'cover', cursor: 'pointer', border: activeImage === product.primaryImage ? '2px solid #000' : '1px solid #ddd' }} 
+              style={{ width: '70px', height: '90px', objectFit: 'cover', cursor: 'pointer', border: activeImage === product.primaryImage ? '2px solid #000' : '1px solid #ddd' }}
             />
             {product.secondaryImage && (
-              <img 
-                src={product.secondaryImage} 
-                alt="Thumb 2" 
+              <img
+                src={product.secondaryImage}
+                alt="Thumb 2"
                 onClick={() => setActiveImage(product.secondaryImage)}
-                style={{ width: '70px', height: '90px', objectFit: 'cover', cursor: 'pointer', border: activeImage === product.secondaryImage ? '2px solid #000' : '1px solid #ddd' }} 
+                style={{ width: '70px', height: '90px', objectFit: 'cover', cursor: 'pointer', border: activeImage === product.secondaryImage ? '2px solid #000' : '1px solid #ddd' }}
               />
             )}
           </div>
@@ -122,7 +122,7 @@ export default function ProductDetailPage() {
 
         {/* GARMENT DETAILS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
+
           {product.badge && (
             <span style={{ display: 'inline-block', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 10px', textTransform: 'uppercase', width: 'max-content' }}>
               {product.badge}
@@ -145,7 +145,7 @@ export default function ProductDetailPage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' }}>Select Size:</span>
-              <span style={{ fontSize: '11px', textDecoration: 'underline', color: '#666', cursor: 'pointer' }} onClick={() => alert('Size Guide: 46 (S), 48 (M), 50 (L), 52 (XL)')}>Size Guide</span>
+
             </div>
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -174,15 +174,15 @@ export default function ProductDetailPage() {
           <div>
             <span style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px', display: 'block', marginBottom: '8px' }}>Quantity:</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button 
+              <button
                 onClick={() => setQuantity(q => Math.max(1, q - 1))}
                 style={{ border: '1px solid #000', width: '36px', height: '36px', fontSize: '16px', fontWeight: '700', cursor: 'pointer' }}
               >
                 -
               </button>
               <span style={{ fontSize: '14px', fontWeight: '700' }}>{quantity}</span>
-              <button 
-                onClick={() => setQuantity(q => q + 1)}
+              <button
+                onClick={() => setQuantity(q => Math.min(99, q + 1))}
                 style={{ border: '1px solid #000', width: '36px', height: '36px', fontSize: '16px', fontWeight: '700', cursor: 'pointer' }}
               >
                 +
@@ -192,8 +192,8 @@ export default function ProductDetailPage() {
 
           {/* ACTION BUTTONS */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
-            <button 
-              onClick={handleAddToCart}
+            <button
+              disabled={!product.inStock} onClick={handleAddToCart}
               style={{
                 background: '#000000',
                 color: '#ffffff',
@@ -208,11 +208,11 @@ export default function ProductDetailPage() {
                 transition: 'all 0.2s ease'
               }}
             >
-              Add to Cart
+              {product.inStock ? 'Add to Cart' : 'Sold out'}
             </button>
 
-            <button 
-              onClick={handleBuyNow}
+            <button
+              disabled={!product.inStock} onClick={handleBuyNow}
               style={{
                 background: '#d00000',
                 color: '#ffffff',
@@ -226,22 +226,10 @@ export default function ProductDetailPage() {
                 width: '100%'
               }}
             >
-              Buy Now — Express Checkout
+              Checkout availability
             </button>
           </div>
 
-          {/* ACCORDION DETAILS */}
-          <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '12px' }}>
-            <div>
-              <strong style={{ textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>✓ Craftsmanship & Fit</strong>
-              Hand-tailored according to Savile Row specifications with West African artisanal embellishment. Model is 188cm wearing size 48.
-            </div>
-
-            <div>
-              <strong style={{ textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>✓ Worldwide Express Delivery</strong>
-              Dispatched within 24 hours. Complimentary worldwide express shipping on all orders over €500.
-            </div>
-          </div>
 
         </div>
 

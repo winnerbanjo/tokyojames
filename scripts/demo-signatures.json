@@ -1,0 +1,200 @@
+{
+  "products": [
+    {
+      "selector": {
+        "id": "tj-1"
+      },
+      "fields": [
+        "id",
+        "title",
+        "category",
+        "categoryName",
+        "priceEUR",
+        "badge",
+        "badgeClass",
+        "primaryImage",
+        "secondaryImage",
+        "description",
+        "sizes",
+        "inStock"
+      ],
+      "hash": "dc87cdb0e5ee5de5cb916017e8f83ac82e17f93d17ed4c09c487445f009626fe"
+    },
+    {
+      "selector": {
+        "id": "tj-2"
+      },
+      "fields": [
+        "id",
+        "title",
+        "category",
+        "categoryName",
+        "priceEUR",
+        "badge",
+        "badgeClass",
+        "primaryImage",
+        "secondaryImage",
+        "description",
+        "sizes",
+        "inStock"
+      ],
+      "hash": "f91a47e6962f20f4ff69992bea55d7ae1c745d5de6ed47d7db690d4de43a4356"
+    },
+    {
+      "selector": {
+        "id": "tj-3"
+      },
+      "fields": [
+        "id",
+        "title",
+        "category",
+        "categoryName",
+        "priceEUR",
+        "badge",
+        "badgeClass",
+        "primaryImage",
+        "secondaryImage",
+        "description",
+        "sizes",
+        "inStock"
+      ],
+      "hash": "45c5d31465fc275e9026977a6336b708ba18206895df887d75d9e85268d11b2a"
+    },
+    {
+      "selector": {
+        "id": "tj-4"
+      },
+      "fields": [
+        "id",
+        "title",
+        "category",
+        "categoryName",
+        "priceEUR",
+        "badge",
+        "badgeClass",
+        "primaryImage",
+        "secondaryImage",
+        "description",
+        "sizes",
+        "inStock"
+      ],
+      "hash": "fea23f9dbe467e4c515d5b8406c763f435ab1b27b582506299f78e90ff7b8834"
+    },
+    {
+      "selector": {
+        "id": "tj-5"
+      },
+      "fields": [
+        "id",
+        "title",
+        "category",
+        "categoryName",
+        "priceEUR",
+        "badge",
+        "badgeClass",
+        "primaryImage",
+        "secondaryImage",
+        "description",
+        "sizes",
+        "inStock"
+      ],
+      "hash": "8f391d328bfba9a47fcc8c44ff9056ab462eed6eead1c73aebf3ac46540e2290"
+    },
+    {
+      "selector": {
+        "id": "tj-6"
+      },
+      "fields": [
+        "id",
+        "title",
+        "category",
+        "categoryName",
+        "priceEUR",
+        "badge",
+        "badgeClass",
+        "primaryImage",
+        "secondaryImage",
+        "description",
+        "sizes",
+        "inStock"
+      ],
+      "hash": "2829efb844da72f9fe5bddd4d01567ebd2ce42a86265e1bebe47def43d47fc5d"
+    },
+    {
+      "selector": {
+        "id": "tj-7"
+      },
+      "fields": [
+        "id",
+        "title",
+        "category",
+        "categoryName",
+        "priceEUR",
+        "originalPriceEUR",
+        "badge",
+        "badgeClass",
+        "primaryImage",
+        "secondaryImage",
+        "description",
+        "sizes",
+        "inStock"
+      ],
+      "hash": "2a9d28d4ae49c4b7ec1b39b7699ed67c5df4ec704a373a90298f91dfe4420084"
+    },
+    {
+      "selector": {
+        "id": "tj-8"
+      },
+      "fields": [
+        "id",
+        "title",
+        "category",
+        "categoryName",
+        "priceEUR",
+        "badge",
+        "badgeClass",
+        "primaryImage",
+        "secondaryImage",
+        "description",
+        "sizes",
+        "inStock"
+      ],
+      "hash": "0b1fd78be477fb16efa3f5d96bea72e81c5482cad93455b647848e3a8e881c42"
+    }
+  ],
+  "lookbooks": [
+    {
+      "selector": {
+        "title": "DARK WATERS • AW24"
+      },
+      "fields": [
+        "season",
+        "title",
+        "image"
+      ],
+      "hash": "68ef7146b91737c3dfe851b06d502602bbb09ffc27380df8c6da5a60d827fea8"
+    },
+    {
+      "selector": {
+        "title": "AFRO-FUTURISM • SS24"
+      },
+      "fields": [
+        "season",
+        "title",
+        "image"
+      ],
+      "hash": "69edb7de831df439933dfa54f8d0cdca921f0c9b4964cfac0d5967c12502a0fa"
+    },
+    {
+      "selector": {
+        "title": "COWHIDE REBELLION • AW23"
+      },
+      "fields": [
+        "season",
+        "title",
+        "image"
+      ],
+      "hash": "dd8495e1f74c569a1349d6ae065b248f0399fcf48ecd9e3568ce64b09d3c4a0c"
+    }
+  ]
+}

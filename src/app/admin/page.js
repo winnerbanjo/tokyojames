@@ -12,9 +12,12 @@ export default function AdminDashboardPage() {
     sustainability: { title: '', headline: '', paragraph: '' },
     hero: { headline: '', subheadline: '', primaryBtnText: '', secondaryBtnText: '' },
     footer: { vatNumber: '', copyrightText: '', contactEmail: '', instagramUrl: '' },
-    rates: { USD: 1.08, GBP: 0.85 }
+    rates: { USD: 1, GBP: 1 }
   });
   const [savingContent, setSavingContent] = useState(false);
+  const [error, setError] = useState('');
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [contentLoaded, setContentLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,7 +36,7 @@ export default function AdminDashboardPage() {
     primaryImage: '',
     secondaryImage: '',
     description: '',
-    sizes: '46, 48, 50, 52'
+    inStock: true, sizes: ''
   });
 
   useEffect(() => {
@@ -43,13 +46,14 @@ export default function AdminDashboardPage() {
   }, []);
 
   const fetchProducts = async () => {
-    setLoading(true);
+    setLoading(true); setError('');
     try {
       const res = await fetch('/api/products');
       const data = await res.json();
-      if (data.success) setProducts(data.data);
+      if (!data.success) throw new Error(data.message);
+      setProducts(data.data);
     } catch (err) {
-      console.error('Error loading products:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -59,9 +63,10 @@ export default function AdminDashboardPage() {
     try {
       const res = await fetch('/api/orders');
       const data = await res.json();
-      if (data.success) setOrders(data.data);
+      if (!data.success) throw new Error(data.message);
+      setOrders(data.data);
     } catch (err) {
-      console.error('Error loading orders:', err);
+      setError(err.message);
     }
   };
 
@@ -69,9 +74,10 @@ export default function AdminDashboardPage() {
     try {
       const res = await fetch('/api/content');
       const data = await res.json();
-      if (data.success && data.data) setSiteContent(data.data);
+      if (!data.success) throw new Error(data.message);
+      setSiteContent(data.data); setContentLoaded(true);
     } catch (err) {
-      console.error('Error loading site content:', err);
+      setError(err.message);
     }
   };
 
@@ -109,7 +115,7 @@ export default function AdminDashboardPage() {
       primaryImage: '',
       secondaryImage: '',
       description: '',
-      sizes: '46, 48, 50, 52'
+      inStock: true, sizes: ''
     });
     setIsModalOpen(true);
   };
@@ -126,7 +132,7 @@ export default function AdminDashboardPage() {
       primaryImage: product.primaryImage,
       secondaryImage: product.secondaryImage || '',
       description: product.description,
-      sizes: product.sizes ? product.sizes.join(', ') : '46, 48, 50, 52'
+      inStock: product.inStock, sizes: product.sizes ? product.sizes.join(', ') : ''
     });
     setIsModalOpen(true);
   };
@@ -139,7 +145,7 @@ export default function AdminDashboardPage() {
       if (data.success) {
         alert('Product deleted successfully');
         fetchProducts();
-      }
+      } else { alert(data.message || 'Unable to delete product.'); }
     } catch (err) {
       alert('Failed to delete product: ' + err.message);
     }
@@ -179,12 +185,14 @@ export default function AdminDashboardPage() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    if (savingProduct || uploadingPrimary || uploadingSecondary) return;
     if (!formData.title || !formData.priceEUR || !formData.primaryImage) {
       alert('Please fill in Title, Price in EUR, and upload/provide a Primary Image');
       return;
     }
 
     const payload = {
+      inStock: formData.inStock,
       title: formData.title,
       category: formData.category,
       categoryName: formData.categoryName,
@@ -198,6 +206,7 @@ export default function AdminDashboardPage() {
       sizes: formData.sizes.split(',').map(s => s.trim()).filter(Boolean)
     };
 
+    setSavingProduct(true);
     try {
       let res;
       if (editingProduct) {
@@ -224,32 +233,21 @@ export default function AdminDashboardPage() {
       }
     } catch (err) {
       alert('Failed to save product: ' + err.message);
-    }
+    } finally { setSavingProduct(false); }
   };
 
-  const handleReseed = async () => {
-    if (!confirm('This will reset the catalog database to original TOKYO JAMES runway collections. Proceed?')) return;
-    try {
-      const res = await fetch('/api/seed', { method: 'POST' });
-      const data = await res.json();
-      alert(data.message || 'Database re-seeded successfully!');
-      fetchProducts();
-    } catch (err) {
-      alert('Error seeding database: ' + err.message);
-    }
-  };
-
-  const filteredProducts = products.filter(p => 
-    p.title.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredProducts = products.filter(p =>
+    p.title.toLowerCase().includes(search.toLowerCase()) ||
     p.categoryName.toLowerCase().includes(search.toLowerCase())
   );
 
   const totalCatalogValue = products.reduce((sum, p) => sum + (p.priceEUR || 0), 0);
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalEUR || 0), 0);
+  const totalRevenue = orders.filter(o => o.paymentStatus === 'paid').reduce((sum, o) => sum + (o.totalEUR || 0), 0);
 
   return (
     <div style={{ padding: '32px 24px', maxWidth: '1400px', margin: '0 auto' }}>
-      
+
+      {error && <div role="alert" style={{ padding: 16, background: '#451a1a', marginBottom: 20 }}>{error} <button onClick={() => { fetchProducts(); fetchOrders(); fetchSiteContent(); }}>Retry</button></div>}
       {/* DASHBOARD HEADER & QUICK ACTIONS */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
@@ -257,39 +255,24 @@ export default function AdminDashboardPage() {
             TOKYO JAMES — Store CMS & Order Management
           </h1>
           <p style={{ color: '#71717a', fontSize: '13px', marginTop: '4px' }}>
-            100% Editable inner pages, hero banners, product catalog, upload fashion media, and client orders.
+            Manage products, site content, and orders. Online payments are not configured.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            onClick={handleReseed} 
-            style={{ 
-              background: '#27272a', 
-              color: '#f4f4f5', 
-              border: '1px solid #3f3f46', 
-              padding: '10px 18px', 
-              borderRadius: '6px', 
-              fontSize: '12px', 
-              fontWeight: '600', 
-              cursor: 'pointer' 
-            }}
-          >
-            ⚡ Re-Seed Catalog
-          </button>
-          <button 
-            onClick={handleCreateNew} 
-            style={{ 
-              background: '#d00000', 
-              color: '#ffffff', 
-              border: 'none', 
-              padding: '10px 20px', 
-              borderRadius: '6px', 
-              fontSize: '12px', 
-              fontWeight: '700', 
-              textTransform: 'uppercase', 
-              letterSpacing: '1px', 
-              cursor: 'pointer' 
+          <button
+            onClick={handleCreateNew}
+            style={{
+              background: '#d00000',
+              color: '#ffffff',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              cursor: 'pointer'
             }}
           >
             + Add New Garment
@@ -326,52 +309,52 @@ export default function AdminDashboardPage() {
 
       {/* TABS NAVIGATION */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #27272a', marginBottom: '24px' }}>
-        <button 
-          onClick={() => setActiveTab('products')} 
-          style={{ 
-            padding: '12px 24px', 
-            fontSize: '13px', 
-            fontWeight: '700', 
-            textTransform: 'uppercase', 
-            letterSpacing: '1px', 
-            background: 'none', 
-            color: activeTab === 'products' ? '#d00000' : '#a1a1aa', 
-            borderBottom: activeTab === 'products' ? '2px solid #d00000' : 'none', 
-            cursor: 'pointer' 
+        <button
+          onClick={() => setActiveTab('products')}
+          style={{
+            padding: '12px 24px',
+            fontSize: '13px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            background: 'none',
+            color: activeTab === 'products' ? '#d00000' : '#a1a1aa',
+            borderBottom: activeTab === 'products' ? '2px solid #d00000' : 'none',
+            cursor: 'pointer'
           }}
         >
           Garments & Catalog ({products.length})
         </button>
 
-        <button 
-          onClick={() => setActiveTab('pages')} 
-          style={{ 
-            padding: '12px 24px', 
-            fontSize: '13px', 
-            fontWeight: '700', 
-            textTransform: 'uppercase', 
-            letterSpacing: '1px', 
-            background: 'none', 
-            color: activeTab === 'pages' ? '#d00000' : '#a1a1aa', 
-            borderBottom: activeTab === 'pages' ? '2px solid #d00000' : 'none', 
-            cursor: 'pointer' 
+        <button
+          onClick={() => setActiveTab('pages')}
+          style={{
+            padding: '12px 24px',
+            fontSize: '13px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            background: 'none',
+            color: activeTab === 'pages' ? '#d00000' : '#a1a1aa',
+            borderBottom: activeTab === 'pages' ? '2px solid #d00000' : 'none',
+            cursor: 'pointer'
           }}
         >
           📝 Site Pages & Content (CMS)
         </button>
 
-        <button 
-          onClick={() => setActiveTab('orders')} 
-          style={{ 
-            padding: '12px 24px', 
-            fontSize: '13px', 
-            fontWeight: '700', 
-            textTransform: 'uppercase', 
-            letterSpacing: '1px', 
-            background: 'none', 
-            color: activeTab === 'orders' ? '#d00000' : '#a1a1aa', 
-            borderBottom: activeTab === 'orders' ? '2px solid #d00000' : 'none', 
-            cursor: 'pointer' 
+        <button
+          onClick={() => setActiveTab('orders')}
+          style={{
+            padding: '12px 24px',
+            fontSize: '13px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            background: 'none',
+            color: activeTab === 'orders' ? '#d00000' : '#a1a1aa',
+            borderBottom: activeTab === 'orders' ? '2px solid #d00000' : 'none',
+            cursor: 'pointer'
           }}
         >
           Client Orders ({orders.length})
@@ -382,25 +365,25 @@ export default function AdminDashboardPage() {
       {activeTab === 'products' && (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-            <input 
-              type="text" 
-              placeholder="Search garments by title or category..." 
+            <input
+              type="text"
+              placeholder="Search garments by title or category..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ 
-                width: '340px', 
-                background: '#18181b', 
-                border: '1px solid #3f3f46', 
-                color: '#fff', 
-                padding: '10px 14px', 
-                borderRadius: '6px', 
-                fontSize: '13px', 
-                outline: 'none' 
+              style={{
+                width: '340px',
+                background: '#18181b',
+                border: '1px solid #3f3f46',
+                color: '#fff',
+                padding: '10px 14px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                outline: 'none'
               }}
             />
           </div>
 
-          <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', overflow: 'hidden' }}>
+          <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
                 <tr style={{ background: '#18181b', borderBottom: '1px solid #27272a', color: '#a1a1aa', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}>
@@ -414,6 +397,8 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody>
+                {loading && <tr><td colSpan={7} style={{ padding: 24 }}>Loading…</td></tr>}
+                {!loading && !filteredProducts.length && <tr><td colSpan={7} style={{ padding: 24 }}>No products found. Add your first garment to publish it.</td></tr>}
                 {filteredProducts.map(p => (
                   <tr key={p.id} style={{ borderBottom: '1px solid #27272a', color: '#e4e4e7' }}>
                     <td style={{ padding: '12px 16px' }}>
@@ -441,13 +426,13 @@ export default function AdminDashboardPage() {
                       {p.sizes ? p.sizes.join(', ') : '46, 48, 50, 52'}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                      <button 
+                      <button
                         onClick={() => handleEdit(p)}
                         style={{ background: '#27272a', color: '#38bdf8', border: '1px solid #0284c7', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', marginRight: '8px', cursor: 'pointer' }}
                       >
                         Edit
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(p.id)}
                         style={{ background: '#27272a', color: '#ef4444', border: '1px solid #dc2626', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
                       >
@@ -465,7 +450,7 @@ export default function AdminDashboardPage() {
       {/* TAB 2: SITE PAGES & CONTENT (CMS) */}
       {activeTab === 'pages' && (
         <form onSubmit={handleSaveSiteContent} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          
+
           {/* SECTION 1: ABOUT PAGE */}
           <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', padding: '24px' }}>
             <h3 style={{ fontSize: '16px', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #27272a', paddingBottom: '10px', marginTop: 0, color: '#d00000' }}>
@@ -475,30 +460,30 @@ export default function AdminDashboardPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Modal Title</label>
-                <input 
-                  type="text" 
-                  value={siteContent.about.title} 
-                  onChange={e => setSiteContent({ ...siteContent, about: { ...siteContent.about, title: e.target.value } })} 
+                <input
+                  type="text"
+                  value={siteContent.about.title}
+                  onChange={e => setSiteContent({ ...siteContent, about: { ...siteContent.about, title: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
                 />
               </div>
 
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Brand Story (Paragraph 1)</label>
-                <textarea 
-                  rows={4} 
-                  value={siteContent.about.paragraph1} 
-                  onChange={e => setSiteContent({ ...siteContent, about: { ...siteContent.about, paragraph1: e.target.value } })} 
+                <textarea
+                  rows={4}
+                  value={siteContent.about.paragraph1}
+                  onChange={e => setSiteContent({ ...siteContent, about: { ...siteContent.about, paragraph1: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', lineHeight: '1.6' }}
                 />
               </div>
 
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Designer Profile (Paragraph 2)</label>
-                <textarea 
-                  rows={4} 
-                  value={siteContent.about.paragraph2} 
-                  onChange={e => setSiteContent({ ...siteContent, about: { ...siteContent.about, paragraph2: e.target.value } })} 
+                <textarea
+                  rows={4}
+                  value={siteContent.about.paragraph2}
+                  onChange={e => setSiteContent({ ...siteContent, about: { ...siteContent.about, paragraph2: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', lineHeight: '1.6' }}
                 />
               </div>
@@ -514,20 +499,20 @@ export default function AdminDashboardPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Brand Quote</label>
-                <textarea 
-                  rows={3} 
-                  value={siteContent.manifesto.quote} 
-                  onChange={e => setSiteContent({ ...siteContent, manifesto: { ...siteContent.manifesto, quote: e.target.value } })} 
+                <textarea
+                  rows={3}
+                  value={siteContent.manifesto.quote}
+                  onChange={e => setSiteContent({ ...siteContent, manifesto: { ...siteContent.manifesto, quote: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', lineHeight: '1.6' }}
                 />
               </div>
 
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Manifesto Mission Statement</label>
-                <textarea 
-                  rows={3} 
-                  value={siteContent.manifesto.subtext} 
-                  onChange={e => setSiteContent({ ...siteContent, manifesto: { ...siteContent.manifesto, subtext: e.target.value } })} 
+                <textarea
+                  rows={3}
+                  value={siteContent.manifesto.subtext}
+                  onChange={e => setSiteContent({ ...siteContent, manifesto: { ...siteContent.manifesto, subtext: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', lineHeight: '1.6' }}
                 />
               </div>
@@ -543,20 +528,20 @@ export default function AdminDashboardPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Headline</label>
-                <input 
-                  type="text" 
-                  value={siteContent.sustainability.headline} 
-                  onChange={e => setSiteContent({ ...siteContent, sustainability: { ...siteContent.sustainability, headline: e.target.value } })} 
+                <input
+                  type="text"
+                  value={siteContent.sustainability.headline}
+                  onChange={e => setSiteContent({ ...siteContent, sustainability: { ...siteContent.sustainability, headline: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Sustainability Policy & Solar-Punk Narrative</label>
-                <textarea 
-                  rows={4} 
-                  value={siteContent.sustainability.paragraph} 
-                  onChange={e => setSiteContent({ ...siteContent, sustainability: { ...siteContent.sustainability, paragraph: e.target.value } })} 
+                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Approved Craftsmanship / Sustainability Copy</label>
+                <textarea
+                  rows={4}
+                  value={siteContent.sustainability.paragraph}
+                  onChange={e => setSiteContent({ ...siteContent, sustainability: { ...siteContent.sustainability, paragraph: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', lineHeight: '1.6' }}
                 />
               </div>
@@ -572,20 +557,20 @@ export default function AdminDashboardPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Main Runway Headline</label>
-                <input 
-                  type="text" 
-                  value={siteContent.hero.headline} 
-                  onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, headline: e.target.value } })} 
+                <input
+                  type="text"
+                  value={siteContent.hero.headline}
+                  onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, headline: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
                 />
               </div>
 
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Sub-Headline</label>
-                <input 
-                  type="text" 
-                  value={siteContent.hero.subheadline} 
-                  onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, subheadline: e.target.value } })} 
+                <input
+                  type="text"
+                  value={siteContent.hero.subheadline}
+                  onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, subheadline: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
                 />
               </div>
@@ -595,58 +580,41 @@ export default function AdminDashboardPage() {
           {/* SECTION 5: FOOTER & CURRENCY RATES */}
           <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', padding: '24px' }}>
             <h3 style={{ fontSize: '16px', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #27272a', paddingBottom: '10px', marginTop: 0, color: '#d00000' }}>
-              5. Footer Copy & Exchange Rates
+              5. Footer & Contact Details
             </h3>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>VAT Details</label>
-                <input 
-                  type="text" 
-                  value={siteContent.footer.vatNumber} 
-                  onChange={e => setSiteContent({ ...siteContent, footer: { ...siteContent.footer, vatNumber: e.target.value } })} 
+                <input
+                  type="text"
+                  value={siteContent.footer.vatNumber}
+                  onChange={e => setSiteContent({ ...siteContent, footer: { ...siteContent.footer, vatNumber: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
                 />
               </div>
 
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Copyright Line</label>
-                <input 
-                  type="text" 
-                  value={siteContent.footer.copyrightText} 
-                  onChange={e => setSiteContent({ ...siteContent, footer: { ...siteContent.footer, copyrightText: e.target.value } })} 
+                <input
+                  type="text"
+                  value={siteContent.footer.copyrightText}
+                  onChange={e => setSiteContent({ ...siteContent, footer: { ...siteContent.footer, copyrightText: e.target.value } })}
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
                 />
               </div>
 
-              <div>
-                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>USD ($) Exchange Rate</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  value={siteContent.rates.USD} 
-                  onChange={e => setSiteContent({ ...siteContent, rates: { ...siteContent.rates, USD: parseFloat(e.target.value) } })} 
-                  style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>GBP (£) Exchange Rate</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  value={siteContent.rates.GBP} 
-                  onChange={e => setSiteContent({ ...siteContent, rates: { ...siteContent.rates, GBP: parseFloat(e.target.value) } })} 
-                  style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
-                />
-              </div>
+              {['contactEmail', 'instagramUrl'].map(field => <div key={field}>
+                <label htmlFor={field}>{field === 'contactEmail' ? 'Contact email' : 'Instagram HTTPS URL'}</label>
+                <input id={field} type={field === 'contactEmail' ? 'email' : 'url'} value={siteContent.footer[field]} onChange={e => setSiteContent({ ...siteContent, footer: { ...siteContent.footer, [field]: e.target.value } })} style={{ width: '100%', padding: 10, background: '#18181b', color: '#fff', border: '1px solid #3f3f46' }} />
+              </div>)}
             </div>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <button 
-              type="submit" 
-              disabled={savingContent}
+            <button
+              type="submit"
+              disabled={savingContent || !contentLoaded}
               style={{ background: '#d00000', color: '#fff', border: 'none', padding: '16px 36px', fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '2px', cursor: 'pointer', borderRadius: '6px' }}
             >
               {savingContent ? 'Saving Live Content...' : '💾 Save All Site Content →'}
@@ -658,7 +626,7 @@ export default function AdminDashboardPage() {
 
       {/* TAB 3: CLIENT ORDERS */}
       {activeTab === 'orders' && (
-        <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', overflow: 'hidden' }}>
+        <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
               <tr style={{ background: '#18181b', borderBottom: '1px solid #27272a', color: '#a1a1aa', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}>
@@ -672,6 +640,7 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody>
+              {!orders.length && <tr><td colSpan={7} style={{ padding: 24 }}>No orders yet.</td></tr>}
               {orders.map(o => (
                 <tr key={o.id} style={{ borderBottom: '1px solid #27272a', color: '#e4e4e7' }}>
                   <td style={{ padding: '12px 16px', fontWeight: '700', color: '#d00000' }}>
@@ -687,14 +656,14 @@ export default function AdminDashboardPage() {
                     {o.shippingAddress}
                   </td>
                   <td style={{ padding: '12px 16px', fontWeight: '700', color: '#22c55e' }}>
-                    € {o.totalEUR.toFixed(2)}
+                    € {Number(o.totalEUR || 0).toFixed(2)}
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '11px', color: '#71717a' }}>
                     {new Date(o.createdAt).toLocaleDateString()}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <span style={{ background: '#14532d', color: '#4ade80', fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                      {o.status || 'Confirmed'}
+                      {o.status || 'Awaiting review'}
                     </span>
                   </td>
                 </tr>
@@ -718,12 +687,12 @@ export default function AdminDashboardPage() {
             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Garment Title *</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={formData.title} 
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
                   onChange={e => setFormData({ ...formData, title: e.target.value })}
-                  style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px', outline: 'none' }} 
+                  style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px', outline: 'none' }}
                   placeholder="e.g. Asymmetric Zip Wool Trench"
                 />
               </div>
@@ -731,7 +700,7 @@ export default function AdminDashboardPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Category *</label>
-                  <select 
+                  <select
                     value={formData.category}
                     onChange={e => {
                       const catNames = { tailoring: 'Bespoke Tailoring', jackets: 'Leather & Outerwear', polos: 'Polos & Shirts', trousers: 'Tailored Trousers', knitwear: 'Luxury Knitwear', accessories: 'Accessories', sale: 'Archive Sale' };
@@ -751,13 +720,13 @@ export default function AdminDashboardPage() {
 
                 <div>
                   <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Price (EUR €) *</label>
-                  <input 
-                    type="number" 
-                    step="0.01" 
-                    required 
-                    value={formData.priceEUR} 
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={formData.priceEUR}
                     onChange={e => setFormData({ ...formData, priceEUR: e.target.value })}
-                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px' }} 
+                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px' }}
                     placeholder="1850.00"
                   />
                 </div>
@@ -766,22 +735,22 @@ export default function AdminDashboardPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Badge (Optional)</label>
-                  <input 
-                    type="text" 
-                    value={formData.badge} 
+                  <input
+                    type="text"
+                    value={formData.badge}
                     onChange={e => setFormData({ ...formData, badge: e.target.value })}
-                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px' }} 
-                    placeholder="e.g. Runway AW24 or Archive Sale"
+                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px' }}
+                    placeholder="Optional badge"
                   />
                 </div>
 
                 <div>
                   <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Available Sizes</label>
-                  <input 
-                    type="text" 
-                    value={formData.sizes} 
+                  <input
+                    type="text"
+                    value={formData.sizes}
                     onChange={e => setFormData({ ...formData, sizes: e.target.value })}
-                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px' }} 
+                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px' }}
                     placeholder="46, 48, 50, 52"
                   />
                 </div>
@@ -793,19 +762,19 @@ export default function AdminDashboardPage() {
                   Primary Image File Upload *
                 </label>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
                     onChange={e => handleFileUpload(e.target.files[0], 'primary')}
                     style={{ fontSize: '12px', color: '#a1a1aa' }}
                   />
                   {uploadingPrimary && <span style={{ fontSize: '11px', color: '#eab308' }}>Uploading image...</span>}
                 </div>
-                <input 
-                  type="text" 
-                  value={formData.primaryImage} 
+                <input
+                  type="text"
+                  value={formData.primaryImage}
                   onChange={e => setFormData({ ...formData, primaryImage: e.target.value })}
-                  style={{ width: '100%', padding: '8px', background: '#09090b', border: '1px solid #27272a', color: '#fff', borderRadius: '4px', fontSize: '12px', marginTop: '8px' }} 
+                  style={{ width: '100%', padding: '8px', background: '#09090b', border: '1px solid #27272a', color: '#fff', borderRadius: '4px', fontSize: '12px', marginTop: '8px' }}
                   placeholder="/images/tj_drive_1.jpg or image URL"
                 />
               </div>
@@ -816,37 +785,38 @@ export default function AdminDashboardPage() {
                   Secondary Hover Image File Upload (Optional)
                 </label>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
                     onChange={e => handleFileUpload(e.target.files[0], 'secondary')}
                     style={{ fontSize: '12px', color: '#a1a1aa' }}
                   />
                   {uploadingSecondary && <span style={{ fontSize: '11px', color: '#eab308' }}>Uploading image...</span>}
                 </div>
-                <input 
-                  type="text" 
-                  value={formData.secondaryImage} 
+                <input
+                  type="text"
+                  value={formData.secondaryImage}
                   onChange={e => setFormData({ ...formData, secondaryImage: e.target.value })}
-                  style={{ width: '100%', padding: '8px', background: '#09090b', border: '1px solid #27272a', color: '#fff', borderRadius: '4px', fontSize: '12px', marginTop: '8px' }} 
-                  placeholder="/images/tj_drive_2.jpg"
+                  style={{ width: '100%', padding: '8px', background: '#09090b', border: '1px solid #27272a', color: '#fff', borderRadius: '4px', fontSize: '12px', marginTop: '8px' }}
+                  placeholder="/images/tj_drive_2.png"
                 />
               </div>
 
               <div>
                 <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Garment Description</label>
-                <textarea 
-                  rows={3} 
-                  value={formData.description} 
+                <textarea
+                  rows={3}
+                  value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px' }} 
-                  placeholder="Tailored according to Savile Row specifications with West African embellishment..."
+                  style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px' }}
+                  placeholder="Describe the garment, materials, and fit"
                 />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
                 <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: '#27272a', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ background: '#d00000', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '4px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', cursor: 'pointer' }}>Save Garment</button>
+                <label><input type="checkbox" checked={formData.inStock} onChange={e => setFormData({ ...formData, inStock: e.target.checked })} /> Available for purchase</label>
+                <button type="submit" disabled={savingProduct || uploadingPrimary || uploadingSecondary} style={{ background: '#d00000', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '4px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', cursor: 'pointer' }}>{savingProduct ? 'Saving…' : 'Save Garment'}</button>
               </div>
             </form>
 

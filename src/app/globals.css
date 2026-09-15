@@ -8,7 +8,7 @@
   --color-sale: #d00000;
   --color-btn-primary: #000000;
   --color-btn-hover: #d00000;
-  
+
   --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --header-height: 72px;
 }
@@ -1031,4 +1031,18 @@ img, video {
   .grid-view-item {
     border-right: none;
   }
+}
+
+/* Keep admin navigation usable on narrow screens. */
+@media (max-width: 640px) {
+  .admin-header {
+    height: auto !important;
+    min-height: 64px;
+    padding: 12px 16px !important;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .admin-header-badge { display: none; }
+  .admin-header > div { gap: 10px !important; }
+  .admin-header a, .admin-header button { white-space: nowrap; }
 }

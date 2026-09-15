@@ -1,33 +1,33 @@
 {
   "about": {
     "title": "About TOKYO JAMES",
-    "paragraph1": "Representing the fusion of music, literary, culinary and origins, that all together forms the rich and hybrid African and British culture. TOKYO JAMES’s identity combines its ‘Caribbean & African Couture’ spirit, as well as its glance towards Arte Povera’s philosophy, together with a strong sustainability consciousness.",
-    "paragraph2": "Ina Adenugba is the creative force behind TOKYO JAMES. The designer combines multicultural influences and mastery of tailoring to infuse the label with a distinct notion of luxury. Edgy yet inclusive, creative sight is an extension of personality."
+    "paragraph1": "TOKYO JAMES",
+    "paragraph2": ""
   },
   "manifesto": {
     "title": "The Manifesto",
-    "quote": "At TOKYO JAMES we care. We care about fashion, as the golden daughter of all arts. We care about nature, as the golden mother of all arts. Without nature, no arts, nothing.",
-    "subtext": "Speaking up and acting for cultural identity and environment is an act of respect. Giving back to nature is giving back to the world. This is the idea we have for a better world, this is the idea we have for the TOKYO JAMES world."
+    "quote": "",
+    "subtext": ""
   },
   "sustainability": {
-    "title": "Craftsmanship & Sustainability",
-    "headline": "Giving back through fashion and zero-waste tailoring",
-    "paragraph": "We are truly connected to our narrative, telling an honest story through our brand and our creations. TOKYO JAMES's collections are run on a Solar punk mindset where technology is leading and emotion and storytelling are vital."
+    "title": "Craftsmanship",
+    "headline": "",
+    "paragraph": ""
   },
   "hero": {
-    "headline": "DARK WATERS AW24",
-    "subheadline": "The New Autumn / Winter Runway Collection by Ina Adenugba",
-    "primaryBtnText": "Details",
-    "secondaryBtnText": "Full Look Video"
+    "headline": "TOKYO JAMES",
+    "subheadline": "",
+    "primaryBtnText": "Explore",
+    "secondaryBtnText": "Watch Film"
   },
   "footer": {
-    "vatNumber": "VAT: UK080129472",
-    "copyrightText": "© 2026, TOKYO JAMES World London • Lagos • Paris",
-    "contactEmail": "concierge@tokyojames.com",
-    "instagramUrl": "https://instagram.com"
+    "vatNumber": "",
+    "copyrightText": "\u00a9 2026 TOKYO JAMES",
+    "contactEmail": "",
+    "instagramUrl": ""
   },
   "rates": {
-    "USD": 1.08,
-    "GBP": 0.85
+    "USD": 1,
+    "GBP": 1
   }
 }

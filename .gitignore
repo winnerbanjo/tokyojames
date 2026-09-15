@@ -36,3 +36,7 @@ next-env.d.ts
 # OS files
 .DS_Store
 *.pem
+
+/backups/
+/test-results/
+/playwright-report/

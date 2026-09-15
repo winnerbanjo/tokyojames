@@ -1,28 +1,14 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase, memoryStore } from '@/lib/db';
+import { connectToDatabase } from '@/lib/db';
 import Subscriber from '@/lib/models/Subscriber';
-
+import { failure, invalid } from '@/lib/api';
 export async function POST(request) {
   try {
-    const { email } = await request.json();
-    if (!email || !email.includes('@')) {
-      return NextResponse.json({ success: false, message: 'Invalid email address' }, { status: 400 });
-    }
-
-    try {
-      const conn = await connectToDatabase();
-      if (conn) {
-        await Subscriber.create({ email });
-        return NextResponse.json({ success: true, message: 'Subscribed to TOKYO JAMES archives!' });
-      }
-    } catch (err) {
-      console.warn('Saving subscriber to memory fallback:', err.message);
-    }
-
-    memoryStore.subscribers.push({ email, createdAt: new Date() });
-    return NextResponse.json({ success: true, message: 'Subscribed to TOKYO JAMES archives!' });
-
-  } catch (err) {
-    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
-  }
+    const body = await request.json();
+    if (typeof body.email !== 'string' || body.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())) invalid('Enter a valid email address.');
+    const email = body.email.trim().toLowerCase();
+    await connectToDatabase();
+    await Subscriber.updateOne({ email }, { $setOnInsert: { email } }, { upsert: true });
+    return NextResponse.json({ success: true, message: 'Thank you for subscribing.' });
+  } catch (error) { if (error.code === 11000) return NextResponse.json({ success: true, message: 'Thank you for subscribing.' }); return failure(error); }
 }

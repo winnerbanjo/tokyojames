@@ -1,27 +1,12 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase, memoryStore } from '@/lib/db';
+import { connectToDatabase } from '@/lib/db';
 import Product from '@/lib/models/Product';
-import { INITIAL_PRODUCTS } from '@/lib/seedData';
-
+import { failure } from '@/lib/api';
+export const dynamic = 'force-dynamic';
 export async function GET(request, { params }) {
-  const { id } = params;
-
   try {
-    const conn = await connectToDatabase();
-    if (conn) {
-      const product = await Product.findOne({ id }).lean();
-      if (product) {
-        return NextResponse.json({ success: true, data: product, source: 'mongodb' });
-      }
-    }
-  } catch (err) {
-    console.warn('DB fetch error, checking memory:', err.message);
-  }
-
-  const found = memoryStore.products.find(p => p.id === id) || INITIAL_PRODUCTS.find(p => p.id === id);
-  if (found) {
-    return NextResponse.json({ success: true, data: found, source: 'seed-memory' });
-  }
-
-  return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
+    await connectToDatabase();
+    const data = await Product.findOne({ id: (await params).id }).lean();
+    return NextResponse.json({ success: Boolean(data), data, ...(!data && { message: 'Product not found.' }) }, { status: data ? 200 : 404 });
+  } catch (error) { return failure(error); }
 }
