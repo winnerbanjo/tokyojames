@@ -11,6 +11,7 @@
     "demo:clean": "node --env-file-if-exists=.env.local scripts/clean-demo.mjs"
   },
   "dependencies": {
+    "cloudinary": "^2.5.1",
     "mongodb": "^6.9.0",
     "mongoose": "^8.7.0",
     "next": "^16.3.5",
