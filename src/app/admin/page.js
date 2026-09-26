@@ -2,6 +2,30 @@
 
 import { useState, useEffect } from 'react';
 
+// Size caps
+const IMAGE_MAX_MB = 10;
+const VIDEO_MAX_MB = 100;
+
+// Direct-to-Cloudinary upload (bypasses Vercel body limit).
+// Gets a server-signed token, then POSTs the file straight to Cloudinary.
+async function directUpload(file, resourceType = 'image') {
+  const signRes = await fetch('/api/admin/upload/sign', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: 'tokyojames' }) });
+  const sign = await signRes.json();
+  if (!sign.success) throw new Error('Failed to get upload signature.');
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('api_key', sign.apiKey);
+  fd.append('timestamp', sign.timestamp);
+  fd.append('signature', sign.signature);
+  fd.append('folder', sign.folder);
+
+  const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${sign.cloudName}/${resourceType}/upload`, { method: 'POST', body: fd });
+  const result = await uploadRes.json();
+  if (!result.secure_url) throw new Error(result.error?.message || 'Cloudinary upload failed.');
+  return result.secure_url;
+}
+
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('products'); // 'products', 'pages', 'orders'
   const [products, setProducts] = useState([]);
@@ -10,7 +34,7 @@ export default function AdminDashboardPage() {
     about: { title: '', paragraph1: '', paragraph2: '' },
     manifesto: { title: '', quote: '', subtext: '' },
     sustainability: { title: '', headline: '', paragraph: '' },
-    hero: { headline: '', subheadline: '', primaryBtnText: '', secondaryBtnText: '' },
+    hero: { headline: '', subheadline: '', primaryBtnText: '', secondaryBtnText: '', videoUrl: '', posterImage: '', bannerImage: '', bannerHeadline: '', bannerBtnText: '' },
     footer: { vatNumber: '', copyrightText: '', contactEmail: '', instagramUrl: '' },
     rates: { USD: 1, GBP: 1 }
   });
@@ -24,6 +48,26 @@ export default function AdminDashboardPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [uploadingPrimary, setUploadingPrimary] = useState(false);
   const [uploadingSecondary, setUploadingSecondary] = useState(false);
+
+  // Hero media upload states
+  const [uploadingHeroVideo, setUploadingHeroVideo] = useState(false);
+  const [uploadingHeroPoster, setUploadingHeroPoster] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+
+  const handleHeroMediaUpload = async (file, field, resourceType = 'image', maxMB = IMAGE_MAX_MB) => {
+    if (!file) return;
+    if (file.size > maxMB * 1024 * 1024) { alert(`File too large. Maximum size is ${maxMB} MB.`); return; }
+    const setUploading = field === 'videoUrl' ? setUploadingHeroVideo : field === 'posterImage' ? setUploadingHeroPoster : setUploadingBanner;
+    setUploading(true);
+    try {
+      const url = await directUpload(file, resourceType);
+      setSiteContent(prev => ({ ...prev, hero: { ...prev.hero, [field]: url } }));
+    } catch (err) {
+      alert('Upload failed: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Form fields
   const [formData, setFormData] = useState({
@@ -600,49 +644,61 @@ export default function AdminDashboardPage() {
 
             {/* VIDEO & POSTER */}
             <div style={{ marginTop: '20px', padding: '16px', background: '#0a0a0d', border: '1px solid #3f3f46', borderRadius: '6px' }}>
-              <p style={{ fontSize: '11px', color: '#eab308', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 12px' }}>
-                🎬 Hero Video — Upload your video to Cloudinary dashboard, then paste the URL below (must end in .mp4)
+              <p style={{ fontSize: '11px', color: '#eab308', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 16px' }}>
+                🎬 Hero Video (max {VIDEO_MAX_MB} MB · MP4/MOV)
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Hero Background Video URL (.mp4)</label>
-                  <input
-                    type="url"
-                    value={siteContent.hero.videoUrl}
-                    onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, videoUrl: e.target.value } })}
-                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
-                    placeholder="https://res.cloudinary.com/.../video.mp4"
-                  />
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '8px' }}>Hero Background Video</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', background: '#18181b', border: '1px dashed #3f3f46', borderRadius: '6px', padding: '12px' }}>
+                    <span style={{ background: '#d00000', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '6px 14px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                      {uploadingHeroVideo ? 'Uploading…' : '📁 Choose Video'}
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#71717a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {siteContent.hero.videoUrl ? '✅ Video uploaded' : 'No file chosen'}
+                    </span>
+                    <input type="file" accept="video/mp4,video/quicktime,video/*" disabled={uploadingHeroVideo} onChange={e => handleHeroMediaUpload(e.target.files[0], 'videoUrl', 'video', VIDEO_MAX_MB)} style={{ display: 'none' }} />
+                  </label>
+                  {siteContent.hero.videoUrl && (
+                    <video src={siteContent.hero.videoUrl} controls muted style={{ width: '100%', marginTop: '8px', borderRadius: '4px', maxHeight: '120px', objectFit: 'cover' }} />
+                  )}
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Hero Poster / Fallback Image URL</label>
-                  <input
-                    type="url"
-                    value={siteContent.hero.posterImage}
-                    onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, posterImage: e.target.value } })}
-                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
-                    placeholder="https://res.cloudinary.com/.../poster.jpg"
-                  />
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '8px' }}>Hero Poster / Fallback Image (max {IMAGE_MAX_MB} MB)</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', background: '#18181b', border: '1px dashed #3f3f46', borderRadius: '6px', padding: '12px' }}>
+                    <span style={{ background: '#27272a', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '6px 14px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                      {uploadingHeroPoster ? 'Uploading…' : '📁 Choose Image'}
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#71717a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {siteContent.hero.posterImage ? '✅ Image uploaded' : 'No file chosen'}
+                    </span>
+                    <input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploadingHeroPoster} onChange={e => handleHeroMediaUpload(e.target.files[0], 'posterImage', 'image', IMAGE_MAX_MB)} style={{ display: 'none' }} />
+                  </label>
+                  {siteContent.hero.posterImage && (
+                    <img src={siteContent.hero.posterImage} alt="Poster preview" style={{ width: '100%', marginTop: '8px', borderRadius: '4px', maxHeight: '120px', objectFit: 'cover' }} />
+                  )}
                 </div>
               </div>
             </div>
 
             {/* EDITORIAL BANNER */}
             <div style={{ marginTop: '20px', padding: '16px', background: '#0a0a0d', border: '1px solid #3f3f46', borderRadius: '6px' }}>
-              <p style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 12px' }}>
-                🖼️ Editorial Banner — The full-width image section below the hero video
+              <p style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 16px' }}>
+                🖼️ Editorial Banner — Full-width image below the hero video (max {IMAGE_MAX_MB} MB)
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Banner Image URL</label>
-                  <input
-                    type="url"
-                    value={siteContent.hero.bannerImage}
-                    onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, bannerImage: e.target.value } })}
-                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
-                    placeholder="https://res.cloudinary.com/.../banner.jpg"
-                  />
-                </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', background: '#18181b', border: '1px dashed #3f3f46', borderRadius: '6px', padding: '12px' }}>
+                <span style={{ background: '#27272a', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '6px 14px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                  {uploadingBanner ? 'Uploading…' : '📁 Choose Banner Image'}
+                </span>
+                <span style={{ fontSize: '11px', color: '#71717a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {siteContent.hero.bannerImage ? '✅ Banner uploaded' : 'No file chosen'}
+                </span>
+                <input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploadingBanner} onChange={e => handleHeroMediaUpload(e.target.files[0], 'bannerImage', 'image', IMAGE_MAX_MB)} style={{ display: 'none' }} />
+              </label>
+              {siteContent.hero.bannerImage && (
+                <img src={siteContent.hero.bannerImage} alt="Banner preview" style={{ width: '100%', marginTop: '8px', borderRadius: '4px', maxHeight: '160px', objectFit: 'cover' }} />
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
                 <div>
                   <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Banner Headline</label>
                   <input
