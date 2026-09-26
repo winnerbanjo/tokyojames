@@ -574,6 +574,96 @@ export default function AdminDashboardPage() {
                   style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
                 />
               </div>
+
+              <div>
+                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Primary Button Text</label>
+                <input
+                  type="text"
+                  value={siteContent.hero.primaryBtnText}
+                  onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, primaryBtnText: e.target.value } })}
+                  style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
+                  placeholder="e.g. Explore"
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Secondary Button Text (Watch Film)</label>
+                <input
+                  type="text"
+                  value={siteContent.hero.secondaryBtnText}
+                  onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, secondaryBtnText: e.target.value } })}
+                  style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
+                  placeholder="e.g. Watch Film"
+                />
+              </div>
+            </div>
+
+            {/* VIDEO & POSTER */}
+            <div style={{ marginTop: '20px', padding: '16px', background: '#0a0a0d', border: '1px solid #3f3f46', borderRadius: '6px' }}>
+              <p style={{ fontSize: '11px', color: '#eab308', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 12px' }}>
+                🎬 Hero Video — Upload your video to Cloudinary dashboard, then paste the URL below (must end in .mp4)
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Hero Background Video URL (.mp4)</label>
+                  <input
+                    type="url"
+                    value={siteContent.hero.videoUrl}
+                    onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, videoUrl: e.target.value } })}
+                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
+                    placeholder="https://res.cloudinary.com/.../video.mp4"
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Hero Poster / Fallback Image URL</label>
+                  <input
+                    type="url"
+                    value={siteContent.hero.posterImage}
+                    onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, posterImage: e.target.value } })}
+                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
+                    placeholder="https://res.cloudinary.com/.../poster.jpg"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* EDITORIAL BANNER */}
+            <div style={{ marginTop: '20px', padding: '16px', background: '#0a0a0d', border: '1px solid #3f3f46', borderRadius: '6px' }}>
+              <p style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 12px' }}>
+                🖼️ Editorial Banner — The full-width image section below the hero video
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Banner Image URL</label>
+                  <input
+                    type="url"
+                    value={siteContent.hero.bannerImage}
+                    onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, bannerImage: e.target.value } })}
+                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '12px' }}
+                    placeholder="https://res.cloudinary.com/.../banner.jpg"
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Banner Headline</label>
+                  <input
+                    type="text"
+                    value={siteContent.hero.bannerHeadline}
+                    onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, bannerHeadline: e.target.value } })}
+                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
+                    placeholder="e.g. TOKYO JAMES Collection"
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Banner Button Text</label>
+                  <input
+                    type="text"
+                    value={siteContent.hero.bannerBtnText}
+                    onChange={e => setSiteContent({ ...siteContent, hero: { ...siteContent.hero, bannerBtnText: e.target.value } })}
+                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px' }}
+                    placeholder="e.g. Shop now"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

@@ -18,7 +18,12 @@
     "headline": "TOKYO JAMES",
     "subheadline": "",
     "primaryBtnText": "Explore",
-    "secondaryBtnText": "Watch Film"
+    "secondaryBtnText": "Watch Film",
+    "videoUrl": "",
+    "posterImage": "",
+    "bannerImage": "",
+    "bannerHeadline": "TOKYO JAMES Collection",
+    "bannerBtnText": "Shop now"
   },
   "footer": {
     "vatNumber": "",

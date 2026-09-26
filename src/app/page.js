@@ -37,6 +37,12 @@ export default function HomePage() {
     ? products
     : products.filter(p => p.category === activeCategory);
 
+  const heroVideoUrl = heroContent.videoUrl || '/videos/tj_campaign_3.mp4';
+  const heroPoster = heroContent.posterImage || '/images/tj_drive_4.jpg';
+  const bannerImage = heroContent.bannerImage || '/images/tj_drive_1.jpg';
+  const bannerHeadline = heroContent.bannerHeadline || 'TOKYO JAMES Collection';
+  const bannerBtnText = heroContent.bannerBtnText || 'Shop now';
+
   const openVideo = (url) => {
     setActiveVideoUrl(url);
     setIsVideoModalOpen(true);
@@ -52,9 +58,9 @@ export default function HomePage() {
           muted
           loop
           playsInline
-          poster="/images/tj_drive_4.jpg"
+          poster={heroPoster}
         >
-          <source src="/videos/tj_campaign_3.mp4" type="video/mp4" />
+          <source src={heroVideoUrl} type="video/mp4" />
         </video>
         <div className="video-section__overlay"></div>
 
@@ -66,7 +72,7 @@ export default function HomePage() {
             </a>
             <button
               className="btn-hero-action"
-              onClick={() => openVideo('/videos/tj_campaign_3.mp4')}
+              onClick={() => openVideo(heroVideoUrl)}
             >
               {heroContent.secondaryBtnText || 'Full Look Video'}
             </button>
@@ -74,18 +80,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* BANNER 2: FW23 RUNWAY */}
+      {/* BANNER 2: EDITORIAL BANNER */}
       <section className="hero-banner__image-wrapper">
         <img
-          src="/images/tj_drive_1.jpg"
-          alt="TOKYO JAMES Collection"
+          src={bannerImage}
+          alt={bannerHeadline}
           className="hero-banner__img"
         />
         <div className="hero-banner__overlay"></div>
         <div className="hero-banner__content">
-          <h2 className="hero-banner__title">TOKYO JAMES Collection</h2>
+          <h2 className="hero-banner__title">{bannerHeadline}</h2>
           <a href="/#collections" className="btn-hero-action">
-            Shop now
+            {bannerBtnText}
           </a>
         </div>
       </section>
