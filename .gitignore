@@ -40,3 +40,5 @@ next-env.d.ts
 /backups/
 /test-results/
 /playwright-report/
+AGENTS.md
+CLAUDE.md

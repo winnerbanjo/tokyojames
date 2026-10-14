@@ -37,8 +37,8 @@ export default function HomePage() {
     ? products
     : products.filter(p => p.category === activeCategory);
 
-  const heroVideoUrl = heroContent.videoUrl || '/videos/tj_campaign_3.mp4';
-  const heroPoster = heroContent.posterImage || '/images/tj_drive_4.jpg';
+  const heroVideoUrl = heroContent.videoUrl || '/videos/hero_video.mp4';
+  const heroPoster = heroContent.posterImage || '/images/hero_poster.jpg';
   const bannerImage = heroContent.bannerImage || '/images/tj_drive_1.jpg';
   const bannerHeadline = heroContent.bannerHeadline || 'TOKYO JAMES Collection';
   const bannerBtnText = heroContent.bannerBtnText || 'Shop now';

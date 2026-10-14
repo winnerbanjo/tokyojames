@@ -19,8 +19,8 @@
     "subheadline": "",
     "primaryBtnText": "Explore",
     "secondaryBtnText": "Watch Film",
-    "videoUrl": "",
-    "posterImage": "",
+    "videoUrl": "/videos/hero_video.mp4",
+    "posterImage": "/images/hero_poster.jpg",
     "bannerImage": "",
     "bannerHeadline": "TOKYO JAMES Collection",
     "bannerBtnText": "Shop now"

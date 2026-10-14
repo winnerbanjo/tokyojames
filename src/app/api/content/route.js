@@ -6,8 +6,13 @@ import { requireAdmin } from '@/lib/auth';
 import { failure, invalid } from '@/lib/api';
 export const dynamic = 'force-dynamic';
 export async function GET() {
-  try { await connectToDatabase(); const row = await SiteContent.findById('site').lean(); return NextResponse.json({ success: true, data: row?.data || defaults }); }
-  catch (error) { return failure(error); }
+  try {
+    await connectToDatabase();
+    const row = await SiteContent.findById('site').lean();
+    return NextResponse.json({ success: true, data: row?.data || defaults });
+  } catch (error) {
+    return NextResponse.json({ success: true, data: defaults });
+  }
 }
 export async function PUT(request) {
   const denied = await requireAdmin(request); if (denied) return denied;
