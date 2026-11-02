@@ -4,6 +4,7 @@ import './globals.css';
 import defaults from '@/data/site_content.json';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import Script from 'next/script';
 import { CurrencyProvider, useCurrency } from '@/context/CurrencyContext';
 
 function LayoutInner({ children }) {
@@ -18,11 +19,24 @@ function LayoutInner({ children }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState(null);
   const [activeModal, setActiveModal] = useState(null); // 'about', 'manifesto', 'sustainability'
   const [megamenu, setMegamenu] = useState(null); // 'shop', 'world', 'lookbook'
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [products, setProducts] = useState([]);
+
+  // Checkout Form State
+  const [checkoutForm, setCheckoutForm] = useState({
+    customerName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    country: 'United Kingdom',
+    zip: ''
+  });
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
   useEffect(() => {
     fetch('/api/products')
@@ -94,6 +108,98 @@ function LayoutInner({ children }) {
     }).filter(Boolean));
   };
 
+  const handleFlutterwavePayment = (e) => {
+    e.preventDefault();
+    if (!cart.length) {
+      alert('Your cart is empty');
+      return;
+    }
+
+    if (!checkoutForm.customerName.trim() || !checkoutForm.email.trim() || !checkoutForm.address.trim()) {
+      alert('Please fill in your name, email, and shipping address.');
+      return;
+    }
+
+    setIsSubmittingOrder(true);
+
+    const publicKey = process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY || 'FLWPUBK-f4b99c9a503ee1ba97d85cec8ac82d08-X';
+    const txRef = `TJ-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+
+    const openCheckout = () => {
+      if (typeof window !== 'undefined' && window.FlutterwaveCheckout) {
+        window.FlutterwaveCheckout({
+          public_key: publicKey,
+          tx_ref: txRef,
+          amount: Number(cartTotal.toFixed(2)),
+          currency: 'EUR',
+          payment_options: 'card,mobilemoney,ussd,banktransfer',
+          customer: {
+            email: checkoutForm.email.trim(),
+            phone_number: checkoutForm.phone?.trim() || '',
+            name: checkoutForm.customerName.trim()
+          },
+          customizations: {
+            title: 'TOKYO JAMES',
+            description: 'Runway & Bespoke Order Payment',
+            logo: '/images/tokyo_james_logo.png'
+          },
+          callback: async function (paymentData) {
+            try {
+              const payload = {
+                customerName: checkoutForm.customerName,
+                email: checkoutForm.email,
+                phone: checkoutForm.phone,
+                address: checkoutForm.address,
+                city: checkoutForm.city,
+                country: checkoutForm.country,
+                zip: checkoutForm.zip,
+                items: cart,
+                totalEUR: cartTotal,
+                currency: 'EUR',
+                transactionId: paymentData.transaction_id || paymentData.id,
+                txRef: paymentData.tx_ref || txRef
+              };
+
+              const res = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const result = await res.json();
+
+              if (result.success) {
+                setCompletedOrder(result.data);
+                setCart([]);
+                setIsCheckoutOpen(false);
+              } else {
+                alert('Payment was processed, but order could not be saved: ' + (result.message || 'Please contact concierge.'));
+              }
+            } catch (err) {
+              console.error('Error saving order:', err);
+              alert('Order recording error. Please contact the store.');
+            } finally {
+              setIsSubmittingOrder(false);
+            }
+          },
+          onclose: function () {
+            setIsSubmittingOrder(false);
+          }
+        });
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.flutterwave.com/v3.js';
+        script.onload = () => openCheckout();
+        script.onerror = () => {
+          setIsSubmittingOrder(false);
+          alert('Unable to load payment gateway. Please check your connection.');
+        };
+        document.body.appendChild(script);
+      }
+    };
+
+    openCheckout();
+  };
+
   const handleSubscribe = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
@@ -106,7 +212,7 @@ function LayoutInner({ children }) {
       const data = await res.json();
       alert(data.message || 'Subscribed successfully!');
       if (res.ok && data.success) e.target.reset();
-    } catch (err) {
+    } catch {
       alert('Subscription could not be saved. Please try again.');
     }
   };
@@ -121,7 +227,6 @@ function LayoutInner({ children }) {
       {/* HEADER */}
       <header className="site-header" id="myHeader">
         <div className="site-header__container">
-
           <button className="mobile-hamburger-btn" onClick={() => setIsMobileNavOpen(true)} aria-label="Open Mobile Menu">
             ☰
           </button>
@@ -139,7 +244,6 @@ function LayoutInner({ children }) {
             >
               World ▾
             </div>
-
           </nav>
 
           {/* OFFICIAL ULTRA-CLEAR BRAND LOGO */}
@@ -161,8 +265,6 @@ function LayoutInner({ children }) {
               style={{ border: 'none', background: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer', outline: 'none' }}
             >
               <option value="EUR">EUR €</option>
-
-
             </select>
 
             <button className="site-header__icon-btn" onClick={() => setIsSearchOpen(true)}>
@@ -199,11 +301,13 @@ function LayoutInner({ children }) {
             <div className="megamenu__column megamenu__preview-col">
               <h4 className="megamenu__column-title">FEATURED RUNWAY GARMENTS</h4>
               <div className="megamenu__preview-grid">
-                {products.slice(0, 2).map(product => <a key={product.id} href={`/product/${product.id}`} className="megamenu__preview-item">
-                  <img src={product.primaryImage} alt={product.title} />
-                  <div className="megamenu__preview-name">{product.title}</div>
-                  <div className="megamenu__preview-price">{formatPrice(product.priceEUR)}</div>
-                </a>)}
+                {products.slice(0, 2).map(product => (
+                  <a key={product.id} href={`/product/${product.id}`} className="megamenu__preview-item">
+                    <img src={product.primaryImage} alt={product.title} />
+                    <div className="megamenu__preview-name">{product.title}</div>
+                    <div className="megamenu__preview-price">{formatPrice(product.priceEUR)}</div>
+                  </a>
+                ))}
               </div>
             </div>
           </div>
@@ -218,9 +322,9 @@ function LayoutInner({ children }) {
             <div className="megamenu__column">
               <h4 className="megamenu__column-title">WORLD</h4>
               <ul className="megamenu__list">
-                {siteContent.about.paragraph1 && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); }}>About Tokyo James</a></li>}
-                {siteContent.manifesto.quote && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); }}>The Manifesto</a></li>}
-                {siteContent.sustainability.paragraph && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); }}>Sustainability</a></li>}
+                {siteContent.about?.paragraph1 && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); }}>About Tokyo James</a></li>}
+                {siteContent.manifesto?.quote && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); }}>The Manifesto</a></li>}
+                {siteContent.sustainability?.paragraph && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); }}>Sustainability</a></li>}
               </ul>
             </div>
 
@@ -232,7 +336,6 @@ function LayoutInner({ children }) {
             </div>
           </div>
         </div>
-
       </header>
 
       {/* MOBILE NAVIGATION DRAWER */}
@@ -265,9 +368,9 @@ function LayoutInner({ children }) {
           <div className="mobile-nav-group">
             <h4 className="mobile-nav-group__title">WORLD & HOUSE</h4>
             <div className="mobile-nav-group__list">
-              <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); setIsMobileNavOpen(false); }}>About Tokyo James <span>→</span></a>
-              <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); setIsMobileNavOpen(false); }}>The Manifesto <span>→</span></a>
-              <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); setIsMobileNavOpen(false); }}>Craftsmanship & Sustainability <span>→</span></a>
+              {siteContent.about?.paragraph1 && <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); setIsMobileNavOpen(false); }}>About Tokyo James <span>→</span></a>}
+              {siteContent.manifesto?.quote && <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); setIsMobileNavOpen(false); }}>The Manifesto <span>→</span></a>}
+              {siteContent.sustainability?.paragraph && <a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); setIsMobileNavOpen(false); }}>Craftsmanship & Sustainability <span>→</span></a>}
             </div>
           </div>
         </div>
@@ -281,8 +384,6 @@ function LayoutInner({ children }) {
               style={{ border: '1px solid #000', padding: '4px 8px', fontSize: '12px' }}
             >
               <option value="EUR">EUR €</option>
-
-
             </select>
           </div>
         </div>
@@ -299,9 +400,9 @@ function LayoutInner({ children }) {
           <div className="site-footer__column">
             <p className="site-footer__block-title">Company</p>
             <ul className="site-footer__linklist">
-              {siteContent.about.paragraph1 && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); }}>About</a></li>}
-              {siteContent.sustainability.paragraph && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); }}>Sustainability</a></li>}
-              {siteContent.manifesto.quote && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); }}>Manifesto</a></li>}
+              {siteContent.about?.paragraph1 && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('about'); }}>About</a></li>}
+              {siteContent.sustainability?.paragraph && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('sustainability'); }}>Sustainability</a></li>}
+              {siteContent.manifesto?.quote && <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveModal('manifesto'); }}>Manifesto</a></li>}
               {siteContent.footer?.instagramUrl && <li><a href={siteContent.footer.instagramUrl} target="_blank" rel="noopener noreferrer">Instagram</a></li>}
             </ul>
           </div>
@@ -309,8 +410,8 @@ function LayoutInner({ children }) {
           <div className="site-footer__column">
             <p className="site-footer__block-title">Customer Service</p>
             <ul className="site-footer__linklist">
-              {siteContent.footer.contactEmail && <li><a href={`mailto:${siteContent.footer.contactEmail}`}>Contact</a></li>}
-              <li>Online ordering opens soon</li>
+              {siteContent.footer?.contactEmail && <li><a href={`mailto:${siteContent.footer.contactEmail}`}>Contact Concierge</a></li>}
+              <li>Secure Payments via Flutterwave</li>
             </ul>
           </div>
 
@@ -333,8 +434,6 @@ function LayoutInner({ children }) {
               className="site-footer__currency-select"
             >
               <option value="EUR">EUR €</option>
-
-
             </select>
           </div>
         </div>
@@ -384,25 +483,220 @@ function LayoutInner({ children }) {
             <span>Subtotal</span>
             <span>{formatPrice(cartTotal)}</span>
           </div>
-          <p style={{ fontSize: '11px', color: '#666', marginBottom: '12px' }}>Online ordering opens soon.</p>
+          <p style={{ fontSize: '11px', color: '#666', marginBottom: '12px' }}>
+            Secure checkout powered by Flutterwave. Free express delivery.
+          </p>
           <button
             className="btn-hero-action"
             style={{ width: '100%', background: '#000', color: '#fff' }}
             onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }}
             disabled={!cart.length}
           >
-            Checkout availability
+            Check Out — Flutterwave Payment
           </button>
         </div>
       </aside>
 
+      {/* FLUTTERWAVE CHECKOUT MODAL */}
       {isCheckoutOpen && (
         <div className="modal-overlay is-open" onClick={() => setIsCheckoutOpen(false)}>
-          <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="checkout-title" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="checkout-title" onClick={e => e.stopPropagation()} style={{ maxWidth: '820px' }}>
             <button className="modal-close-btn" aria-label="Close" onClick={() => setIsCheckoutOpen(false)}>✕</button>
-            <h2 id="checkout-title">Online ordering opens soon</h2>
-            <p>Checkout is currently unavailable. No payment has been taken.</p>
-            {siteContent.footer.contactEmail && <a href={`mailto:${siteContent.footer.contactEmail}`}>Contact the store</a>}
+
+            <div style={{ textTransform: 'uppercase', marginBottom: '20px', borderBottom: '1px solid #000', paddingBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <img src="/images/tokyo_james_logo.png" alt="TOKYO JAMES" style={{ height: '22px', mixBlendMode: 'multiply' }} />
+              <span style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '1px', color: '#111' }}>Flutterwave Secure Checkout</span>
+            </div>
+
+            <form onSubmit={handleFlutterwavePayment} className="checkout-form-grid">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #ddd', paddingBottom: '4px', margin: 0 }}>
+                  1. Shipping Information
+                </h4>
+
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={checkoutForm.customerName}
+                    onChange={e => setCheckoutForm({ ...checkoutForm, customerName: e.target.value })}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                    placeholder="e.g. Victoria Spencer"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={checkoutForm.email}
+                    onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                    placeholder="victoria@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Phone Number (Optional)</label>
+                  <input
+                    type="tel"
+                    value={checkoutForm.phone}
+                    onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                    placeholder="+44 7911 123456"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Street Address *</label>
+                  <input
+                    type="text"
+                    required
+                    value={checkoutForm.address}
+                    onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                    placeholder="14 Mayfair Square"
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: '600' }}>City *</label>
+                    <input
+                      type="text"
+                      required
+                      value={checkoutForm.city}
+                      onChange={e => setCheckoutForm({ ...checkoutForm, city: e.target.value })}
+                      style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                      placeholder="London"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Postal Code</label>
+                    <input
+                      type="text"
+                      value={checkoutForm.zip}
+                      onChange={e => setCheckoutForm({ ...checkoutForm, zip: e.target.value })}
+                      style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                      placeholder="W1J 8AJ"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Country *</label>
+                  <input
+                    type="text"
+                    required
+                    value={checkoutForm.country}
+                    onChange={e => setCheckoutForm({ ...checkoutForm, country: e.target.value })}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #000', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                    placeholder="United Kingdom"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #ddd', paddingBottom: '4px', margin: 0 }}>
+                  2. Order Summary
+                </h4>
+
+                <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #eee', padding: '10px', background: '#fcfcfc' }}>
+                  {cart.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}>
+                      <span>{item.quantity}x {item.title} ({item.size})</span>
+                      <span style={{ fontWeight: '700' }}>{formatPrice(item.priceEUR * item.quantity)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ background: '#fafafa', border: '1px solid #eee', padding: '14px', borderRadius: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', marginBottom: '6px' }}>
+                    <span>Total Amount</span>
+                    <span style={{ color: '#d00000' }}>{formatPrice(cartTotal)}</span>
+                  </div>
+                  <span style={{ fontSize: '11px', color: '#666' }}>Includes Worldwide Express Delivery & Duties</span>
+                </div>
+
+                <div style={{ background: '#f5f5f5', border: '1px solid #ddd', padding: '12px', fontSize: '11px', color: '#444', lineHeight: '1.5' }}>
+                  🔒 <strong>Flutterwave Protected:</strong> Pay with Card, Apple Pay, Bank Transfer, or USSD via Flutterwave's encrypted gateway.
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingOrder || !cart.length}
+                  style={{ background: '#d00000', color: '#fff', border: 'none', padding: '15px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', marginTop: '4px', width: '100%', transition: 'background 0.2s ease' }}
+                >
+                  {isSubmittingOrder ? 'Connecting to Flutterwave...' : `Pay ${formatPrice(cartTotal)} via Flutterwave →`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ORDER CONFIRMATION RECEIPT SCREEN */}
+      {completedOrder && (
+        <div className="modal-overlay is-open" onClick={() => setCompletedOrder(null)}>
+          <div className="modal-content" style={{ maxWidth: '580px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <button className="modal-close-btn" aria-label="Close" onClick={() => setCompletedOrder(null)}>✕</button>
+
+            <div style={{ background: '#22c55e', color: '#fff', width: '56px', height: '56px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', marginBottom: '16px' }}>
+              ✓
+            </div>
+
+            <h2 style={{ fontSize: '22px', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 6px 0' }}>
+              Order Confirmed!
+            </h2>
+
+            <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
+              Thank you for your purchase, <strong>{completedOrder.customerName}</strong>. Your TOKYO JAMES order has been placed.
+            </p>
+
+            <div style={{ background: '#fafafa', border: '1px solid #000', padding: '20px', textAlign: 'left', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' }}>Receipt Number</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#d00000' }}>{completedOrder.id}</span>
+              </div>
+
+              <div style={{ fontSize: '12px', marginBottom: '12px' }}>
+                <strong>Payment Status:</strong> <span style={{ color: '#22c55e', fontWeight: '700' }}>Paid via Flutterwave</span>
+                {completedOrder.transactionId && (
+                  <span style={{ display: 'block', color: '#666', fontSize: '11px', marginTop: '2px' }}>
+                    Transaction ID: {completedOrder.transactionId}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ fontSize: '12px', marginBottom: '12px' }}>
+                <strong>Shipping Address:</strong><br />
+                {completedOrder.shippingAddress}
+              </div>
+
+              <div style={{ fontSize: '12px', marginBottom: '12px' }}>
+                <strong>Items Ordered:</strong>
+                {completedOrder.items?.map((it, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', color: '#444', marginTop: '4px' }}>
+                    <span>• {it.quantity}x {it.title} ({it.size})</span>
+                    <span>{formatPrice(it.priceEUR * it.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ borderTop: '1px solid #000', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700' }}>
+                <span>Total Paid</span>
+                <span>{formatPrice(completedOrder.totalEUR)}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setCompletedOrder(null)}
+              style={{ background: '#000', color: '#fff', border: 'none', padding: '12px 28px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', cursor: 'pointer' }}
+            >
+              Continue Shopping
+            </button>
           </div>
         </div>
       )}
@@ -470,7 +764,6 @@ function LayoutInner({ children }) {
           </div>
         </div>
       </div>
-
     </>
   );
 }
@@ -484,6 +777,7 @@ export default function RootLayout({ children }) {
         <meta name="description" content="Explore TOKYO JAMES collections and films." />
       </head>
       <body>
+        <Script src="https://checkout.flutterwave.com/v3.js" strategy="lazyOnload" />
         <CurrencyProvider>
           <LayoutInner>{children}</LayoutInner>
         </CurrencyProvider>
