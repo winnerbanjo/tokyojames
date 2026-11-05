@@ -299,7 +299,7 @@ export default function AdminDashboardPage() {
             TOKYO JAMES — Store CMS & Order Management
           </h1>
           <p style={{ color: '#71717a', fontSize: '13px', marginTop: '4px' }}>
-            Manage products, site content, and orders. Online payments are not configured.
+            Manage products, site content, and orders. Payments powered by Flutterwave.
           </p>
         </div>
 
@@ -780,7 +780,7 @@ export default function AdminDashboardPage() {
                 <th style={{ padding: '14px 16px' }}>Customer Name</th>
                 <th style={{ padding: '14px 16px' }}>Email</th>
                 <th style={{ padding: '14px 16px' }}>Shipping Address</th>
-                <th style={{ padding: '14px 16px' }}>Total (EUR)</th>
+                <th style={{ padding: '14px 16px' }}>Total Paid</th>
                 <th style={{ padding: '14px 16px' }}>Date</th>
                 <th style={{ padding: '14px 16px' }}>Status</th>
               </tr>
@@ -802,7 +802,14 @@ export default function AdminDashboardPage() {
                     {o.shippingAddress}
                   </td>
                   <td style={{ padding: '12px 16px', fontWeight: '700', color: '#22c55e' }}>
-                    € {Number(o.totalEUR || 0).toFixed(2)}
+                    {o.currency === 'NGN' ? (
+                      <div>
+                        <span>₦{Number(o.totalPaid || o.totalEUR * 1650).toLocaleString()}</span>
+                        <span style={{ display: 'block', fontSize: '11px', color: '#a1a1aa' }}>(€{Number(o.totalEUR || 0).toFixed(2)})</span>
+                      </div>
+                    ) : (
+                      <span>€ {Number(o.totalEUR || 0).toFixed(2)}</span>
+                    )}
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '11px', color: '#71717a' }}>
                     {new Date(o.createdAt).toLocaleDateString()}

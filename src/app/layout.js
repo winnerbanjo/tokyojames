@@ -11,7 +11,7 @@ function LayoutInner({ children }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
 
-  const { currency, setCurrency, formatPrice } = useCurrency();
+  const { currency, setCurrency, formatPrice, convertPrice, rates } = useCurrency();
   const [cart, setCart] = useState([]);
   const [siteContent, setSiteContent] = useState(defaults);
 
@@ -124,14 +124,16 @@ function LayoutInner({ children }) {
 
     const publicKey = process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY || 'FLWPUBK-f4b99c9a503ee1ba97d85cec8ac82d08-X';
     const txRef = `TJ-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+    const activeCurrency = currency || 'EUR';
+    const payableAmount = convertPrice(cartTotal, activeCurrency);
 
     const openCheckout = () => {
       if (typeof window !== 'undefined' && window.FlutterwaveCheckout) {
         window.FlutterwaveCheckout({
           public_key: publicKey,
           tx_ref: txRef,
-          amount: Number(cartTotal.toFixed(2)),
-          currency: 'EUR',
+          amount: payableAmount,
+          currency: activeCurrency,
           payment_options: 'card,mobilemoney,ussd,banktransfer',
           customer: {
             email: checkoutForm.email.trim(),
@@ -140,7 +142,7 @@ function LayoutInner({ children }) {
           },
           customizations: {
             title: 'TOKYO JAMES',
-            description: 'Runway & Bespoke Order Payment',
+            description: `${activeCurrency} Payment for Runway Order`,
             logo: '/images/tokyo_james_logo.png'
           },
           callback: async function (paymentData) {
@@ -155,7 +157,9 @@ function LayoutInner({ children }) {
                 zip: checkoutForm.zip,
                 items: cart,
                 totalEUR: cartTotal,
-                currency: 'EUR',
+                totalPaid: payableAmount,
+                currency: activeCurrency,
+                exchangeRate: rates[activeCurrency] || 1,
                 transactionId: paymentData.transaction_id || paymentData.id,
                 txRef: paymentData.tx_ref || txRef
               };
@@ -262,9 +266,20 @@ function LayoutInner({ children }) {
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              style={{ border: 'none', background: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer', outline: 'none' }}
+              aria-label="Select Currency"
+              style={{
+                border: '1px solid #000',
+                background: '#fff',
+                fontSize: '11px',
+                fontWeight: '700',
+                padding: '4px 6px',
+                cursor: 'pointer',
+                outline: 'none',
+                letterSpacing: '0.5px'
+              }}
             >
-              <option value="EUR">EUR €</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="NGN">NGN (₦)</option>
             </select>
 
             <button className="site-header__icon-btn" onClick={() => setIsSearchOpen(true)}>
@@ -381,9 +396,11 @@ function LayoutInner({ children }) {
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              style={{ border: '1px solid #000', padding: '4px 8px', fontSize: '12px' }}
+              aria-label="Mobile Currency Selector"
+              style={{ border: '1px solid #000', padding: '6px 12px', fontSize: '12px', background: '#fff', fontWeight: '700', cursor: 'pointer' }}
             >
-              <option value="EUR">EUR €</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="NGN">NGN (₦)</option>
             </select>
           </div>
         </div>
@@ -432,8 +449,11 @@ function LayoutInner({ children }) {
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
               className="site-footer__currency-select"
+              aria-label="Footer Currency Selector"
+              style={{ fontWeight: '700', cursor: 'pointer' }}
             >
-              <option value="EUR">EUR €</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="NGN">NGN (₦)</option>
             </select>
           </div>
         </div>
@@ -662,7 +682,7 @@ function LayoutInner({ children }) {
               </div>
 
               <div style={{ fontSize: '12px', marginBottom: '12px' }}>
-                <strong>Payment Status:</strong> <span style={{ color: '#22c55e', fontWeight: '700' }}>Paid via Flutterwave</span>
+                <strong>Payment Status:</strong> <span style={{ color: '#22c55e', fontWeight: '700' }}>Paid via Flutterwave ({completedOrder.currency || 'EUR'})</span>
                 {completedOrder.transactionId && (
                   <span style={{ display: 'block', color: '#666', fontSize: '11px', marginTop: '2px' }}>
                     Transaction ID: {completedOrder.transactionId}
@@ -680,14 +700,14 @@ function LayoutInner({ children }) {
                 {completedOrder.items?.map((it, idx) => (
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', color: '#444', marginTop: '4px' }}>
                     <span>• {it.quantity}x {it.title} ({it.size})</span>
-                    <span>{formatPrice(it.priceEUR * it.quantity)}</span>
+                    <span>{formatPrice(it.priceEUR * it.quantity, completedOrder.currency || 'EUR')}</span>
                   </div>
                 ))}
               </div>
 
               <div style={{ borderTop: '1px solid #000', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700' }}>
                 <span>Total Paid</span>
-                <span>{formatPrice(completedOrder.totalEUR)}</span>
+                <span>{completedOrder.currency === 'NGN' ? `₦${Number(completedOrder.totalPaid || completedOrder.totalEUR * (completedOrder.exchangeRate || 1650)).toLocaleString()}` : formatPrice(completedOrder.totalEUR, 'EUR')}</span>
               </div>
             </div>
 

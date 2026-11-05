@@ -121,7 +121,17 @@ export async function POST(request) {
 
     // 3. Construct Order Document
     const orderId = body.txRef || (verifiedPayment?.tx_ref) || `TJ-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const totalAmount = Number(body.totalEUR) || Number(verifiedPayment?.amount) || 0;
+    const orderCurrency = body.currency || verifiedPayment?.currency || 'EUR';
+    const exchangeRate = Number(body.exchangeRate) || (orderCurrency === 'NGN' ? 1650 : 1);
+    
+    let totalEUR = Number(body.totalEUR) || 0;
+    let totalPaid = Number(body.totalPaid) || Number(verifiedPayment?.amount) || 0;
+    if (!totalEUR && totalPaid) {
+      totalEUR = orderCurrency === 'EUR' ? totalPaid : Number((totalPaid / exchangeRate).toFixed(2));
+    }
+    if (!totalPaid && totalEUR) {
+      totalPaid = orderCurrency === 'NGN' ? Math.round(totalEUR * exchangeRate) : totalEUR;
+    }
 
     const order = {
       id: orderId,
@@ -137,8 +147,10 @@ export async function POST(request) {
         quantity: Number(it.quantity) || 1,
         image: it.image || ''
       })),
-      totalEUR: totalAmount,
-      currency: body.currency || verifiedPayment?.currency || 'EUR',
+      totalEUR: totalEUR,
+      totalPaid: totalPaid,
+      currency: orderCurrency,
+      exchangeRate: exchangeRate,
       transactionId: transactionId ? String(transactionId) : null,
       flwRef: verifiedPayment?.flw_ref || null,
       paymentMethod: 'Flutterwave',
