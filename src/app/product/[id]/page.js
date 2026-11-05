@@ -21,9 +21,10 @@ export default function ProductDetailPage() {
           if (data.success && data.data) {
             setProduct(data.data);
             setActiveImage(data.data.primaryImage);
-            if (data.data.sizes && data.data.sizes.length) {
-              setSelectedSize(data.data.sizes[0]);
-            }
+            const initialSizes = (data.data.sizes && data.data.sizes.length)
+              ? data.data.sizes
+              : ['Small', 'Medium', 'Large', 'Extra Large'];
+            setSelectedSize(initialSizes[0]);
           }
         })
         .catch(err => console.error('Error fetching product:', err))
@@ -31,8 +32,13 @@ export default function ProductDetailPage() {
     }
   }, [params]);
 
+  const availableSizes = (product?.sizes && product.sizes.length)
+    ? product.sizes
+    : ['Small', 'Medium', 'Large', 'Extra Large'];
+
   const handleAddToCart = () => {
-    if (!product.inStock || !selectedSize) {
+    const sizeToUse = selectedSize || availableSizes[0];
+    if (!product.inStock || !sizeToUse) {
       alert('Please select a size first!');
       return;
     }
@@ -41,7 +47,7 @@ export default function ProductDetailPage() {
       detail: {
         id: product.id,
         title: product.title,
-        size: selectedSize,
+        size: sizeToUse,
         priceEUR: product.priceEUR,
         quantity: quantity,
         image: product.primaryImage
@@ -51,7 +57,8 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
-    if (!product.inStock || !selectedSize) {
+    const sizeToUse = selectedSize || availableSizes[0];
+    if (!product.inStock || !sizeToUse) {
       alert('Please select a size first!');
       return;
     }
@@ -60,7 +67,7 @@ export default function ProductDetailPage() {
       detail: {
         id: product.id,
         title: product.title,
-        size: selectedSize,
+        size: sizeToUse,
         priceEUR: product.priceEUR,
         quantity: quantity,
         image: product.primaryImage
@@ -143,25 +150,30 @@ export default function ProductDetailPage() {
 
           {/* SIZE SELECTOR */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' }}>Select Size:</span>
-
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' }}>
+                Select Size: <span style={{ color: '#d00000', fontWeight: '800' }}>{selectedSize || availableSizes[0]}</span>
+              </span>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {product.sizes && product.sizes.map(size => (
+              {availableSizes.map(size => (
                 <button
                   key={size}
+                  type="button"
                   onClick={() => setSelectedSize(size)}
                   style={{
-                    border: selectedSize === size ? '2px solid #000' : '1px solid #ccc',
-                    background: selectedSize === size ? '#000' : '#fff',
-                    color: selectedSize === size ? '#fff' : '#000',
-                    padding: '10px 16px',
+                    border: (selectedSize || availableSizes[0]) === size ? '2px solid #000' : '1px solid #ccc',
+                    background: (selectedSize || availableSizes[0]) === size ? '#000' : '#fff',
+                    color: (selectedSize || availableSizes[0]) === size ? '#fff' : '#000',
+                    padding: '10px 18px',
                     fontSize: '12px',
                     fontWeight: '700',
                     cursor: 'pointer',
-                    minWidth: '50px'
+                    minWidth: '52px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    transition: 'all 0.15s ease'
                   }}
                 >
                   {size}

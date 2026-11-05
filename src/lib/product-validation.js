@@ -11,8 +11,9 @@ export function productData(body) {
   if (body.originalPriceEUR != null && (typeof body.originalPriceEUR !== 'number' || !Number.isFinite(body.originalPriceEUR) || body.originalPriceEUR < result.priceEUR)) invalid('Original price must be at least the current price.');
   result.originalPriceEUR = body.originalPriceEUR ?? null;
   for (const field of ['primaryImage', 'secondaryImage']) { const value = body[field] || body.primaryImage; if (!safeImage(value)) invalid('Use an HTTPS image URL or a local image path.'); result[field] = value; }
-  if (!Array.isArray(body.sizes) || !body.sizes.length || body.sizes.length > 30 || body.sizes.some(s => typeof s !== 'string' || !s.trim() || s.length > 30)) invalid('At least one valid size is required.');
-  result.sizes = [...new Set(body.sizes.map(s => s.trim()))];
+  const rawSizes = (Array.isArray(body.sizes) && body.sizes.length) ? body.sizes : ['Small', 'Medium', 'Large', 'Extra Large'];
+  result.sizes = [...new Set(rawSizes.map(s => String(s).trim()).filter(Boolean))];
+  if (!result.sizes.length) result.sizes = ['Small', 'Medium', 'Large', 'Extra Large'];
   if (body.inStock !== undefined && typeof body.inStock !== 'boolean') invalid('Stock status must be a boolean.');
   result.inStock = body.inStock ?? true;
   if (body.badge != null && (typeof body.badge !== 'string' || body.badge.length > 100)) invalid('Invalid badge.');

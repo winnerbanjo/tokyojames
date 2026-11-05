@@ -26,6 +26,20 @@ async function directUpload(file, resourceType = 'image') {
   return result.secure_url;
 }
 
+export const SIZE_PRESETS = {
+  standard: ['Small', 'Medium', 'Large', 'Extra Large'],
+  alpha: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+  tailoring: ['44', '46', '48', '50', '52', '54'],
+  oneSize: ['One Size']
+};
+
+export const COMMON_SIZES = [
+  'Small', 'Medium', 'Large', 'Extra Large',
+  'XS', 'S', 'M', 'L', 'XL', 'XXL',
+  'One Size', 'Bespoke',
+  '44', '46', '48', '50', '52', '54'
+];
+
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('products'); // 'products', 'pages', 'orders'
   const [products, setProducts] = useState([]);
@@ -159,9 +173,28 @@ export default function AdminDashboardPage() {
       primaryImage: '',
       secondaryImage: '',
       description: '',
-      inStock: true, sizes: ''
+      inStock: true,
+      sizes: 'Small, Medium, Large, Extra Large'
     });
     setIsModalOpen(true);
+  };
+
+  const toggleSize = (sizeToToggle) => {
+    const current = formData.sizes
+      ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+    let updated;
+    if (current.includes(sizeToToggle)) {
+      updated = current.filter(s => s !== sizeToToggle);
+    } else {
+      updated = [...current, sizeToToggle];
+    }
+    setFormData(prev => ({ ...prev, sizes: updated.join(', ') }));
+  };
+
+  const applySizePreset = (presetKey) => {
+    const presetSizes = SIZE_PRESETS[presetKey] || [];
+    setFormData(prev => ({ ...prev, sizes: presetSizes.join(', ') }));
   };
 
   const handleEdit = (product) => {
@@ -176,7 +209,8 @@ export default function AdminDashboardPage() {
       primaryImage: product.primaryImage,
       secondaryImage: product.secondaryImage || '',
       description: product.description,
-      inStock: product.inStock, sizes: product.sizes ? product.sizes.join(', ') : ''
+      inStock: product.inStock,
+      sizes: (product.sizes && product.sizes.length) ? product.sizes.join(', ') : 'Small, Medium, Large, Extra Large'
     });
     setIsModalOpen(true);
   };
@@ -247,7 +281,9 @@ export default function AdminDashboardPage() {
       primaryImage: formData.primaryImage,
       secondaryImage: formData.secondaryImage || formData.primaryImage,
       description: formData.description,
-      sizes: formData.sizes.split(',').map(s => s.trim()).filter(Boolean)
+      sizes: (formData.sizes && formData.sizes.trim())
+        ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean)
+        : ['Small', 'Medium', 'Large', 'Extra Large']
     };
 
     setSavingProduct(true);
@@ -466,8 +502,14 @@ export default function AdminDashboardPage() {
                         <span style={{ color: '#52525b', fontSize: '12px' }}>—</span>
                       )}
                     </td>
-                    <td style={{ padding: '12px 16px', fontSize: '12px', color: '#a1a1aa' }}>
-                      {p.sizes ? p.sizes.join(', ') : '46, 48, 50, 52'}
+                    <td style={{ padding: '12px 16px', fontSize: '11px' }}>
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxWidth: '220px' }}>
+                        {(p.sizes && p.sizes.length ? p.sizes : ['Small', 'Medium', 'Large']).map((sz, idx) => (
+                          <span key={idx} style={{ background: '#27272a', border: '1px solid #3f3f46', padding: '2px 6px', borderRadius: '3px', color: '#e4e4e7', fontSize: '11px' }}>
+                            {sz}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                       <button
@@ -897,15 +939,101 @@ export default function AdminDashboardPage() {
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>Available Sizes</label>
-                  <input
-                    type="text"
-                    value={formData.sizes}
-                    onChange={e => setFormData({ ...formData, sizes: e.target.value })}
-                    style={{ width: '100%', padding: '10px', background: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px' }}
-                    placeholder="46, 48, 50, 52"
-                  />
+                <div style={{ gridColumn: '1 / -1', background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', padding: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#fff', fontWeight: '700', letterSpacing: '0.5px' }}>
+                      Garment Sizes (Small, Medium, Large, etc.)
+                    </label>
+                    <span style={{ fontSize: '11px', color: '#a1a1aa' }}>
+                      {formData.sizes ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean).length : 0} size(s) selected
+                    </span>
+                  </div>
+
+                  {/* QUICK PRESETS */}
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '11px', color: '#71717a', alignSelf: 'center', marginRight: '4px' }}>Quick Presets:</span>
+                    <button
+                      type="button"
+                      onClick={() => applySizePreset('standard')}
+                      style={{ background: '#27272a', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      + Small, Medium, Large, XL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applySizePreset('alpha')}
+                      style={{ background: '#27272a', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      + XS, S, M, L, XL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applySizePreset('tailoring')}
+                      style={{ background: '#27272a', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      + 46, 48, 50, 52 (Tailoring)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applySizePreset('oneSize')}
+                      style={{ background: '#27272a', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      + One Size
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, sizes: '' })}
+                      style={{ background: '#3f1515', color: '#f87171', border: '1px solid #7f1d1d', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+
+                  {/* CLICKABLE TOGGLE CHIPS */}
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                    {COMMON_SIZES.map(sz => {
+                      const curList = formData.sizes ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean) : [];
+                      const isSelected = curList.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => toggleSize(sz)}
+                          style={{
+                            background: isSelected ? '#d00000' : '#09090b',
+                            color: isSelected ? '#fff' : '#d4d4d8',
+                            border: isSelected ? '1px solid #ef4444' : '1px solid #3f3f46',
+                            borderRadius: '4px',
+                            padding: '6px 10px',
+                            fontSize: '12px',
+                            fontWeight: isSelected ? '700' : '400',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'all 0.1s ease'
+                          }}
+                        >
+                          {isSelected && <span>✓</span>}
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* EDITABLE TEXT INPUT */}
+                  <div>
+                    <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#71717a', display: 'block', marginBottom: '4px' }}>
+                      Sizes in Storefront (comma-separated, fully editable):
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.sizes}
+                      onChange={e => setFormData({ ...formData, sizes: e.target.value })}
+                      style={{ width: '100%', padding: '10px', background: '#09090b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '4px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                      placeholder="e.g. Small, Medium, Large, Extra Large"
+                    />
+                  </div>
                 </div>
               </div>
 
