@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import defaults from '@/data/site_content.json';
 import { useCurrency } from '@/context/CurrencyContext';
 
@@ -46,6 +47,25 @@ export default function HomePage() {
   const openVideo = (url) => {
     setActiveVideoUrl(url);
     setIsVideoModalOpen(true);
+  };
+
+  const handleQuickAdd = (p, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const sizeToUse = (p.sizes && p.sizes.length) ? p.sizes[0] : 'Medium';
+    const event = new CustomEvent('tj-add-to-cart', {
+      detail: {
+        id: p.id,
+        title: p.title,
+        size: sizeToUse,
+        priceEUR: p.priceEUR,
+        quantity: 1,
+        image: p.primaryImage
+      }
+    });
+    window.dispatchEvent(event);
   };
 
   return (
@@ -156,50 +176,74 @@ export default function HomePage() {
         {error && <p role="alert">The collection is temporarily unavailable. Please try again shortly.</p>}
         {!loading && !error && filteredProducts.length === 0 && <p style={{ padding: '48px 20px', textAlign: 'center' }}>New pieces are coming soon.</p>}
         <div className="product-grid">
-          {filteredProducts.map(p => (
-            <div key={p.id} className="grid-view-item">
-              <a href={`/product/${p.id}`}>
-                <div className="grid-view-item__image-wrapper">
-                  {p.badge && (
-                    <span className={`badge ${p.badgeClass}`}>
-                      {p.badge}
-                    </span>
-                  )}
-                  <img
-                    src={p.primaryImage}
-                    alt={p.title}
-                    className="grid-view-item__image primary"
-                  />
-                  <img
-                    src={p.secondaryImage || p.primaryImage}
-                    alt={p.title}
-                    className="grid-view-item__image secondary"
-                  />
-                </div>
-              </a>
+          {filteredProducts.map((p, idx) => {
+            const alternateImages = [
+              '/images/tj_drive_2.png',
+              '/images/tj_drive_4.jpg',
+              '/images/tj_drive_5.jpg',
+              '/images/tj_drive_6.jpg',
+              '/images/tj_drive_7.jpg',
+              '/images/tj_drive_1.jpg'
+            ];
+            const hasDistinctSecondary = p.secondaryImage && p.secondaryImage !== p.primaryImage;
+            const hoverImage = hasDistinctSecondary ? p.secondaryImage : alternateImages[idx % alternateImages.length];
 
-              <div className="grid-view-item__meta">
-                <a href={`/product/${p.id}`} className="grid-view-item__title">
-                  {p.title}
-                </a>
+            return (
+              <div key={p.id} className="grid-view-item">
+                <Link href={`/product/${p.id}`} className="grid-view-item__link">
+                  <div className="grid-view-item__image-wrapper">
+                    {p.badge && (
+                      <span className={`badge ${p.badgeClass}`}>
+                        {p.badge}
+                      </span>
+                    )}
+                    <img
+                      src={p.primaryImage}
+                      alt={p.title}
+                      className="grid-view-item__image primary"
+                      loading="lazy"
+                    />
+                    <img
+                      src={hoverImage}
+                      alt={`${p.title} - Runway View`}
+                      className="grid-view-item__image secondary"
+                      loading="lazy"
+                    />
+                    {/* QUICK ADD TO CART BUTTON ON HOVER */}
+                    <button
+                      type="button"
+                      className="quick-add-btn"
+                      onClick={(e) => handleQuickAdd(p, e)}
+                      aria-label={`Add ${p.title} to bag`}
+                    >
+                      + Quick Add to Cart
+                    </button>
+                  </div>
+                </Link>
 
-                <div className="product-price">
-                  {p.originalPriceEUR ? (
-                    <>
-                      <span className="product-price__sale">
-                        {formatPrice(p.originalPriceEUR)}
-                      </span>
-                      <span style={{ color: 'var(--color-sale)' }}>
-                        {formatPrice(p.priceEUR)}
-                      </span>
-                    </>
-                  ) : (
-                    <span>{formatPrice(p.priceEUR)}</span>
-                  )}
+                <div className="grid-view-item__meta">
+                  <Link href={`/product/${p.id}`} className="grid-view-item__title">
+                    {p.title}
+                  </Link>
+
+                  <div className="product-price">
+                    {p.originalPriceEUR ? (
+                      <>
+                        <span className="product-price__sale">
+                          {formatPrice(p.originalPriceEUR)}
+                        </span>
+                        <span style={{ color: 'var(--color-sale)' }}>
+                          {formatPrice(p.priceEUR)}
+                        </span>
+                      </>
+                    ) : (
+                      <span>{formatPrice(p.priceEUR)}</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

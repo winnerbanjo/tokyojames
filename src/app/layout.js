@@ -4,6 +4,7 @@ import './globals.css';
 import defaults from '@/data/site_content.json';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import Script from 'next/script';
 import { CurrencyProvider, useCurrency } from '@/context/CurrencyContext';
 
@@ -54,6 +55,34 @@ function LayoutInner({ children }) {
       .catch(err => console.error('Error fetching dynamic site content:', err));
   }, []);
 
+  // 1. Load persisted cart from localStorage on client mount
+  const [cartLoaded, setCartLoaded] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tj_cart');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) {
+          setCart(parsed);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not load cart from localStorage:', err);
+    } finally {
+      setCartLoaded(true);
+    }
+  }, []);
+
+  // 2. Persist cart to localStorage whenever cart changes
+  useEffect(() => {
+    if (!cartLoaded) return;
+    try {
+      localStorage.setItem('tj_cart', JSON.stringify(cart));
+    } catch (err) {
+      console.warn('Could not save cart to localStorage:', err);
+    }
+  }, [cart, cartLoaded]);
+
   // Listen for custom add to cart & buy now events from Product Detail Page
   useEffect(() => {
     const handleAddToCartEvent = (e) => {
@@ -72,7 +101,13 @@ function LayoutInner({ children }) {
 
     const handleBuyNowEvent = (e) => {
       const item = e.detail;
-      setCart([item]);
+      setCart(prev => {
+        const existingIdx = prev.findIndex(p => p.id === item.id && p.size === item.size);
+        if (existingIdx !== -1) {
+          return prev;
+        }
+        return [...prev, item];
+      });
       setIsCheckoutOpen(true);
     };
 
@@ -174,6 +209,7 @@ function LayoutInner({ children }) {
               if (result.success) {
                 setCompletedOrder(result.data);
                 setCart([]);
+                try { localStorage.removeItem('tj_cart'); } catch {}
                 setIsCheckoutOpen(false);
               } else {
                 alert('Payment was processed, but order could not be saved: ' + (result.message || 'Please contact concierge.'));
@@ -252,13 +288,13 @@ function LayoutInner({ children }) {
 
           {/* OFFICIAL ULTRA-CLEAR BRAND LOGO */}
           <div className="site-header__logo">
-            <a href="/" className="site-header__logo-link">
+            <Link href="/" className="site-header__logo-link">
               <img
                 src="/images/tokyo_james_logo.png"
                 alt="TOKYO JAMES"
                 className="site-header__logo-img"
               />
-            </a>
+            </Link>
           </div>
 
           <div className="site-header__nav-right">
@@ -317,11 +353,11 @@ function LayoutInner({ children }) {
               <h4 className="megamenu__column-title">FEATURED RUNWAY GARMENTS</h4>
               <div className="megamenu__preview-grid">
                 {products.slice(0, 2).map(product => (
-                  <a key={product.id} href={`/product/${product.id}`} className="megamenu__preview-item">
+                  <Link key={product.id} href={`/product/${product.id}`} className="megamenu__preview-item" onClick={() => setMegamenu(null)}>
                     <img src={product.primaryImage} alt={product.title} />
                     <div className="megamenu__preview-name">{product.title}</div>
                     <div className="megamenu__preview-price">{formatPrice(product.priceEUR)}</div>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>

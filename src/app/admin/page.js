@@ -62,6 +62,32 @@ export default function AdminDashboardPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [uploadingPrimary, setUploadingPrimary] = useState(false);
   const [uploadingSecondary, setUploadingSecondary] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    setUpdatingStatus(true);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, status: newStatus })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+        }
+      } else {
+        alert('Failed to update status: ' + data.message);
+      }
+    } catch (err) {
+      alert('Error updating status: ' + err.message);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   // Hero media upload states
   const [uploadingHeroVideo, setUploadingHeroVideo] = useState(false);
@@ -819,28 +845,48 @@ export default function AdminDashboardPage() {
             <thead>
               <tr style={{ background: '#18181b', borderBottom: '1px solid #27272a', color: '#a1a1aa', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}>
                 <th style={{ padding: '14px 16px' }}>Receipt ID</th>
-                <th style={{ padding: '14px 16px' }}>Customer Name</th>
-                <th style={{ padding: '14px 16px' }}>Email</th>
+                <th style={{ padding: '14px 16px' }}>Customer</th>
+                <th style={{ padding: '14px 16px' }}>Ordered Garments & Sizes</th>
                 <th style={{ padding: '14px 16px' }}>Shipping Address</th>
                 <th style={{ padding: '14px 16px' }}>Total Paid</th>
                 <th style={{ padding: '14px 16px' }}>Date</th>
                 <th style={{ padding: '14px 16px' }}>Status</th>
+                <th style={{ padding: '14px 16px', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {!orders.length && <tr><td colSpan={7} style={{ padding: 24 }}>No orders yet.</td></tr>}
+              {!orders.length && <tr><td colSpan={8} style={{ padding: 24 }}>No orders yet.</td></tr>}
               {orders.map(o => (
                 <tr key={o.id} style={{ borderBottom: '1px solid #27272a', color: '#e4e4e7' }}>
-                  <td style={{ padding: '12px 16px', fontWeight: '700', color: '#d00000' }}>
+                  <td style={{ padding: '12px 16px', fontWeight: '700', color: '#d00000', fontFamily: 'monospace' }}>
                     {o.id}
                   </td>
-                  <td style={{ padding: '12px 16px', fontWeight: '600' }}>
-                    {o.customerName}
+                  <td style={{ padding: '12px 16px' }}>
+                    <div style={{ fontWeight: '600' }}>{o.customerName}</div>
+                    <div style={{ fontSize: '11px', color: '#a1a1aa' }}>{o.email}</div>
+                    {o.phone && <div style={{ fontSize: '11px', color: '#71717a' }}>{o.phone}</div>}
                   </td>
-                  <td style={{ padding: '12px 16px', color: '#a1a1aa' }}>
-                    {o.email}
+                  <td style={{ padding: '12px 16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
+                      {o.items && o.items.map((it, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#18181b', padding: '4px 8px', borderRadius: '4px', border: '1px solid #27272a' }}>
+                          {it.image && (
+                            <img src={it.image} alt={it.title} style={{ width: '28px', height: '36px', objectFit: 'cover', borderRadius: '2px', border: '1px solid #3f3f46' }} />
+                          )}
+                          <div style={{ fontSize: '12px', lineHeight: '1.2' }}>
+                            <div style={{ fontWeight: '600', color: '#fff' }}>{it.title}</div>
+                            <div style={{ display: 'flex', gap: '6px', marginTop: '2px', fontSize: '10px' }}>
+                              <span style={{ background: '#d00000', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontWeight: '700' }}>
+                                Size: {it.size || 'Standard'}
+                              </span>
+                              <span style={{ color: '#a1a1aa' }}>Qty: {it.quantity}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: '12px' }}>
+                  <td style={{ padding: '12px 16px', fontSize: '12px', maxWidth: '200px' }}>
                     {o.shippingAddress}
                   </td>
                   <td style={{ padding: '12px 16px', fontWeight: '700', color: '#22c55e' }}>
@@ -858,13 +904,180 @@ export default function AdminDashboardPage() {
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <span style={{ background: '#14532d', color: '#4ade80', fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                      {o.status || 'Awaiting review'}
+                      {o.status || 'Confirmed'}
                     </span>
+                  </td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOrder(o)}
+                      style={{ background: '#27272a', color: '#38bdf8', border: '1px solid #0284c7', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                    >
+                      View Details 🔍
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ORDER DETAILS INSPECTOR MODAL */}
+      {selectedOrder && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#121215', border: '1px solid #3f3f46', borderRadius: '12px', padding: '28px', width: '92%', maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #27272a', paddingBottom: '16px', marginBottom: '20px' }}>
+              <div>
+                <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#d00000', fontWeight: '700' }}>TOKYO JAMES CLIENT ORDER</span>
+                <h2 style={{ fontSize: '20px', color: '#fff', margin: '4px 0 0', fontWeight: '700', fontFamily: 'monospace' }}>
+                  {selectedOrder.id}
+                </h2>
+                <span style={{ fontSize: '11px', color: '#71717a' }}>
+                  Placed on {new Date(selectedOrder.createdAt).toLocaleString()}
+                </span>
+              </div>
+              <button onClick={() => setSelectedOrder(null)} style={{ background: 'none', border: 'none', color: '#a1a1aa', fontSize: '22px', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            {/* ORDER STATUS UPDATE BAR */}
+            <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <span style={{ fontSize: '12px', textTransform: 'uppercase', fontWeight: '700', color: '#e4e4e7' }}>
+                Fulfillment Status:
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <select
+                  value={selectedOrder.status || 'Confirmed'}
+                  disabled={updatingStatus}
+                  onChange={(e) => handleUpdateOrderStatus(selectedOrder.id, e.target.value)}
+                  style={{ background: '#09090b', color: '#4ade80', border: '1px solid #16a34a', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="In Production / Bespoke Tailoring">In Production / Bespoke Tailoring</option>
+                  <option value="Packed & Ready">Packed & Ready</option>
+                  <option value="Shipped / Dispatched">Shipped / Dispatched</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled / Refunded">Cancelled / Refunded</option>
+                </select>
+                {updatingStatus && <span style={{ fontSize: '11px', color: '#eab308' }}>Updating...</span>}
+              </div>
+            </div>
+
+            {/* CUSTOMER & SHIPPING CARDS */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+              <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px', padding: '16px' }}>
+                <h4 style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#a1a1aa', margin: '0 0 10px 0' }}>Customer Contact</h4>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>{selectedOrder.customerName}</div>
+                <div style={{ fontSize: '12px', color: '#38bdf8', marginTop: '4px' }}>
+                  <a href={`mailto:${selectedOrder.email}`} style={{ color: '#38bdf8', textDecoration: 'underline' }}>{selectedOrder.email}</a>
+                </div>
+                {selectedOrder.phone && (
+                  <div style={{ fontSize: '12px', color: '#a1a1aa', marginTop: '4px' }}>
+                    Tel: <a href={`tel:${selectedOrder.phone}`} style={{ color: '#e4e4e7' }}>{selectedOrder.phone}</a>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px', padding: '16px' }}>
+                <h4 style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#a1a1aa', margin: '0 0 10px 0' }}>Delivery Address</h4>
+                <div style={{ fontSize: '13px', color: '#e4e4e7', lineHeight: '1.5' }}>
+                  {selectedOrder.shippingAddress}
+                </div>
+              </div>
+            </div>
+
+            {/* PAYMENT & GATEWAY CARD */}
+            <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+              <h4 style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#a1a1aa', margin: '0 0 10px 0' }}>Payment Information</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '12px' }}>
+                <div>
+                  <span style={{ color: '#71717a', display: 'block' }}>Payment Gateway:</span>
+                  <span style={{ fontWeight: '700', color: '#fff' }}>Flutterwave</span>
+                </div>
+                <div>
+                  <span style={{ color: '#71717a', display: 'block' }}>Payment Status:</span>
+                  <span style={{ fontWeight: '700', color: '#4ade80' }}>✓ Verified Paid</span>
+                </div>
+                <div>
+                  <span style={{ color: '#71717a', display: 'block' }}>Transaction ID:</span>
+                  <span style={{ fontFamily: 'monospace', color: '#e4e4e7' }}>{selectedOrder.transactionId || selectedOrder.flwRef || '—'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ORDERED GARMENTS & PRODUCT DETAILS (THE REQUESTED FEATURE) */}
+            <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+              <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#d00000', margin: '0 0 14px 0', borderBottom: '1px solid #27272a', paddingBottom: '8px' }}>
+                Ordered Products & Garment Details ({selectedOrder.items?.length || 0})
+              </h4>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {selectedOrder.items && selectedOrder.items.map((it, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px', background: '#09090b', borderRadius: '6px', border: '1px solid #27272a' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      {it.image && (
+                        <img src={it.image} alt={it.title} style={{ width: '48px', height: '60px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #3f3f46' }} />
+                      )}
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>{it.title}</div>
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px', alignItems: 'center' }}>
+                          <span style={{ background: '#d00000', color: '#fff', fontSize: '11px', fontWeight: '800', padding: '2px 8px', borderRadius: '3px', textTransform: 'uppercase' }}>
+                            Size: {it.size || 'Standard'}
+                          </span>
+                          <span style={{ fontSize: '12px', color: '#a1a1aa' }}>Quantity: {it.quantity}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>
+                        € {Number(it.priceEUR * it.quantity).toFixed(2)}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#71717a' }}>
+                        € {Number(it.priceEUR).toFixed(2)} each
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* TOTAL ROW */}
+              <div style={{ borderTop: '1px solid #27272a', marginTop: '16px', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', color: '#e4e4e7' }}>Total Paid:</span>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#22c55e' }}>
+                    {selectedOrder.currency === 'NGN'
+                      ? `₦${Number(selectedOrder.totalPaid || selectedOrder.totalEUR * 1650).toLocaleString()}`
+                      : `€ ${Number(selectedOrder.totalEUR || 0).toFixed(2)}`
+                    }
+                  </div>
+                  {selectedOrder.currency === 'NGN' && (
+                    <div style={{ fontSize: '11px', color: '#a1a1aa' }}>
+                      Base: € {Number(selectedOrder.totalEUR || 0).toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ACTION FOOTER */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                style={{ background: '#27272a', color: '#fff', border: '1px solid #3f3f46', padding: '10px 18px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                🖨️ Print Packing Slip / Receipt
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedOrder(null)}
+                style={{ background: '#d00000', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

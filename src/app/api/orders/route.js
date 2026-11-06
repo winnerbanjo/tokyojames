@@ -183,3 +183,39 @@ export async function POST(request) {
     return failure(error);
   }
 }
+
+export async function PATCH(request) {
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
+
+  try {
+    const { id, status } = await request.json();
+    if (!id || !status) {
+      return NextResponse.json({ success: false, message: 'Missing order ID or status' }, { status: 400 });
+    }
+
+    // 1. Update in local storage fallback
+    try {
+      const current = readOrdersFromFile();
+      const updated = current.map(o => o.id === id ? { ...o, status, updatedAt: new Date().toISOString() } : o);
+      fs.writeFileSync(ordersFilePath, JSON.stringify(updated, null, 2), 'utf8');
+    } catch (fErr) {
+      console.warn('Local orders.json update error:', fErr.message);
+    }
+
+    // 2. Update in MongoDB
+    try {
+      const db = await connectToDatabase();
+      await db.connection.collection('orders').updateOne(
+        { $or: [{ id }, { _id: id }] },
+        { $set: { status, updatedAt: new Date() } }
+      );
+    } catch (dbErr) {
+      console.warn('MongoDB update error:', dbErr.message);
+    }
+
+    return NextResponse.json({ success: true, message: `Order ${id} status updated to ${status}` });
+  } catch (error) {
+    return failure(error);
+  }
+}

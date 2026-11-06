@@ -483,6 +483,7 @@ img, video {
   padding-top: 133%;
   overflow: hidden;
   background-color: #f7f7f7;
+  cursor: pointer;
 }
 
 .grid-view-item__image {
@@ -492,19 +493,58 @@ img, video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.grid-view-item__image.primary {
+  opacity: 1;
+  z-index: 1;
 }
 
 .grid-view-item__image.secondary {
   opacity: 0;
+  z-index: 2;
+  transform: scale(1.04);
 }
 
 .grid-view-item:hover .grid-view-item__image.primary {
-  opacity: 0;
+  transform: scale(1.06);
 }
 
 .grid-view-item:hover .grid-view-item__image.secondary {
   opacity: 1;
+  transform: scale(1);
+}
+
+.quick-add-btn {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.92);
+  color: #fff;
+  border: none;
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  z-index: 5;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
+}
+
+.grid-view-item:hover .quick-add-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.quick-add-btn:hover {
+  background: #d00000;
 }
 
 .badge {
