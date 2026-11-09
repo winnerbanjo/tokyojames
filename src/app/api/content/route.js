@@ -9,7 +9,14 @@ export async function GET() {
   try {
     await connectToDatabase();
     const row = await SiteContent.findById('site').lean();
-    return NextResponse.json({ success: true, data: row?.data || defaults });
+    const content = row?.data || defaults;
+    if (content?.hero?.videoUrl?.includes('sr7titqlq5dalxxbuzwy') || content?.hero?.headline === 'TOKYO JAMES') {
+      content.hero.videoUrl = '/videos/hero_video.mp4';
+      content.hero.posterImage = '/images/hero_poster.jpg';
+      content.hero.headline = '';
+      await SiteContent.findByIdAndUpdate('site', { $set: { data: content } }).catch(() => {});
+    }
+    return NextResponse.json({ success: true, data: content });
   } catch (error) {
     return NextResponse.json({ success: true, data: defaults });
   }

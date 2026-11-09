@@ -38,11 +38,12 @@ export default function HomePage() {
     ? products
     : products.filter(p => p.category === activeCategory);
 
-  const heroVideoUrl = heroContent.videoUrl || '/videos/hero_video.mp4';
-  const heroPoster = heroContent.posterImage || '/images/hero_poster.jpg';
-  const bannerImage = heroContent.bannerImage || '/images/tj_drive_1.jpg';
-  const bannerHeadline = heroContent.bannerHeadline || 'TOKYO JAMES Collection';
-  const bannerBtnText = heroContent.bannerBtnText || 'Shop now';
+  const heroVideoUrl = (heroContent.videoUrl && !heroContent.videoUrl.includes('sr7titqlq5dalxxbuzwy'))
+    ? heroContent.videoUrl
+    : '/videos/hero_video.mp4';
+  const heroPoster = (heroContent.posterImage && !heroContent.posterImage.includes('tmndediz7geny6d9opbr'))
+    ? heroContent.posterImage
+    : '/images/hero_poster.jpg';
 
   const openVideo = (url) => {
     setActiveVideoUrl(url);
@@ -96,22 +97,6 @@ export default function HomePage() {
               {heroContent.secondaryBtnText || 'Watch Film'}
             </button>
           </div>
-        </div>
-      </section>
-
-      {/* BANNER 2: EDITORIAL BANNER */}
-      <section className="hero-banner__image-wrapper">
-        <img
-          src={bannerImage}
-          alt={bannerHeadline}
-          className="hero-banner__img"
-        />
-        <div className="hero-banner__overlay"></div>
-        <div className="hero-banner__content">
-          <h2 className="hero-banner__title">{bannerHeadline}</h2>
-          <a href="/#collections" className="btn-hero-action">
-            {bannerBtnText}
-          </a>
         </div>
       </section>
 
