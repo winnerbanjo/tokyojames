@@ -85,16 +85,15 @@ export default function HomePage() {
         <div className="video-section__overlay"></div>
 
         <div className="video-section__content">
-          <h1 className="video-section__title">{heroContent.headline || 'TOKYO JAMES'}</h1>
           <div className="video-section__actions">
             <a href="/#collections" className="btn-hero-action">
-              {heroContent.primaryBtnText || 'Details'}
+              {heroContent.primaryBtnText || 'Explore'}
             </a>
             <button
               className="btn-hero-action"
               onClick={() => openVideo(heroVideoUrl)}
             >
-              {heroContent.secondaryBtnText || 'Full Look Video'}
+              {heroContent.secondaryBtnText || 'Watch Film'}
             </button>
           </div>
         </div>
