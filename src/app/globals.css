@@ -326,7 +326,19 @@ img, video {
 /* ==========================================================================
    HERO VIDEO & BANNER SECTIONS (RESPONSIVE)
    ========================================================================== */
-.video-section-container,
+.video-section-container {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - var(--header-height));
+  min-height: 480px;
+  background-color: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  text-align: center;
+}
+
 .hero-banner__image-wrapper,
 .brand-world-container {
   position: relative;
@@ -364,7 +376,15 @@ img, video {
   z-index: 2;
 }
 
-.video-section__content,
+.video-section__content {
+  position: relative;
+  z-index: 3;
+  color: #fff;
+  padding: 0 20px 48px;
+  max-width: 800px;
+  width: 100%;
+}
+
 .hero-banner__content,
 .brand-world__content {
   position: relative;
@@ -389,7 +409,8 @@ img, video {
 .video-section__actions {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -397,15 +418,16 @@ img, video {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 28px;
+  padding: 8px 18px;
   border: 1px solid #ffffff;
   background: transparent;
   color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   transition: all 0.2s ease;
+  line-height: 1;
 }
 
 .btn-hero-action:hover {
@@ -1056,11 +1078,15 @@ img, video {
     max-width: 100%;
   }
   .video-section__actions {
-    flex-direction: column;
-    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    width: auto;
   }
-  .btn-hero-action {
-    width: 100%;
+  .video-section__actions .btn-hero-action {
+    width: auto;
+    padding: 7px 15px;
+    font-size: 10px;
   }
 }
 

@@ -544,7 +544,7 @@ function LayoutInner({ children }) {
           </p>
           <button
             className="btn-hero-action"
-            style={{ width: '100%', background: '#000', color: '#fff' }}
+            style={{ width: '100%', background: '#000', color: '#fff', padding: '14px', fontSize: '12px' }}
             onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }}
             disabled={!cart.length}
           >
